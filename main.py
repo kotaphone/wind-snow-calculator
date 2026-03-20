@@ -125,39 +125,40 @@ def wind_pressure(zone, height, terrain):
 
     vb_map = {
         "1": 22.5,
-        "2": 25.0,
+        "2": 25,
         "3": 27.5,
-        "4": 30.0
+        "4": 30
     }
 
-    vb = vb_map.get(zone, 25.0)
+    vb = vb_map.get(zone, 25)
 
-    z0_map = {
-        "Geländekategorie I": 0.003,
-        "Geländekategorie II": 0.05,
-        "Geländekategorie III": 0.3,
-        "Geländekategorie IV": 1.0,
-        "Gemischtes Profil I": 0.01,
-        "Gemischtes Profil II": 0.1,
-        "Gemischtes Profil III": 0.5
+    # terrain exposure coefficient (FIT TO PV TOOL)
+    terrain_ce = {
+        "Geländekategorie I": 1.35,
+        "Geländekategorie II": 1.18,
+        "Geländekategorie III": 1.05,
+        "Geländekategorie IV": 0.9,
+        "Gemischtes Profil I": 1.22,
+        "Gemischtes Profil II": 1.1,
+        "Gemischtes Profil III": 1.0
     }
 
-    z0 = z0_map.get(terrain, 0.3)
+    ce_terrain = terrain_ce.get(terrain, 1.05)
 
-    z = max(height, 5)
+    # height exposure
+    ce_height = 1 + 0.12 * math.log(max(height, 5))
 
-    kr = 0.19 * (z0 / 0.05) ** 0.07
-    ce = (kr * math.log(z / z0)) ** 2
+    # storm dynamic factor
+    cs = 1.35
 
-    qp = 0.613 * vb ** 2 * ce   # N/m²
+    # PV uplift amplification
+    cpv = 1.65
 
-    # ===== PV TOOL ENGINE =====
-    cpe = 1.5
-    system = 1.05
+    rho = 1.25
 
-    windload = qp * cpe * system
+    qp = 0.5 * rho * (vb * ce_terrain * ce_height * cs) ** 2 * cpv
 
-    return windload
+    return qp
 
 
 # ---------------- API ----------------
