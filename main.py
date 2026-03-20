@@ -123,36 +123,41 @@ def snow_roof(zone, elevation, angle):
 
 def wind_pressure(zone, height, terrain):
 
+    # Basic wind velocity vb DIN Germany
     vb_map = {
         "1": 22.5,
-        "2": 25,
+        "2": 25.0,
         "3": 27.5,
-        "4": 30
+        "4": 30.0
     }
 
-    vb = vb_map.get(zone, 25)
+    vb = vb_map.get(zone, 25.0)
 
-    terrain_map = {
-        "Geländekategorie I": (0.003, 0.14),
-        "Geländekategorie II": (0.05, 0.16),
-        "Geländekategorie III": (0.3, 0.19),
-        "Geländekategorie IV": (1.0, 0.22),
-        "Gemischtes Profil I": (0.02, 0.15),
-        "Gemischtes Profil II": (0.15, 0.18),
-        "Gemischtes Profil III": (0.6, 0.20)
+    # Terrain roughness length z0 DIN
+    z0_map = {
+        "Geländekategorie I": 0.003,
+        "Geländekategorie II": 0.05,
+        "Geländekategorie III": 0.3,
+        "Geländekategorie IV": 1.0,
+        "Gemischtes Profil I": 0.01,
+        "Gemischtes Profil II": 0.1,
+        "Gemischtes Profil III": 0.5
     }
 
-    z0, alpha = terrain_map.get(terrain, (0.3, 0.19))
+    z0 = z0_map.get(terrain, 0.3)
 
-    z = max(height, 10)
+    # minimal reference height DIN
+    z = max(height, 5)
 
-    # logarithmic wind profile (Eurocode style)
-    ce = (math.log(z / z0)) ** 2 * (alpha ** 2)
+    # DIN exposure factor ce(z)
+    kr = 0.19 * (z0 / 0.05) ** 0.07
+    ce = (kr * math.log(z / z0)) ** 2
 
+    # peak velocity pressure
     qp = 0.613 * vb ** 2 * ce
 
-    # PV system aerodynamic reduction
-    qp = qp * 0.78
+    # PV mounting aerodynamic reduction (VERY IMPORTANT)
+    qp = qp * 0.9
 
     return qp
 
