@@ -121,6 +121,8 @@ def snow_roof(zone, elevation, angle):
 
 # ---------------- WIND (PV TOOL LIKE) ----------------
 
+import math
+
 def wind_pressure(zone, height, terrain):
 
     vb_map = {
@@ -130,33 +132,25 @@ def wind_pressure(zone, height, terrain):
         "4": 30
     }
 
-    vb = vb_map.get(zone, 25)
-
-    # exposure coefficient by terrain (PV calibrated)
+    # Solar.Pro.Tool calibrated exposure at ~10–12 m height
     ce_map = {
-        "Geländekategorie I": 1.35,
-        "Geländekategorie II": 1.2,
-        "Geländekategorie III": 1.05,
-        "Geländekategorie IV": 0.9,
-        "Gemischtes Profil I": 1.25,
-        "Gemischtes Profil II": 1.1,
-        "Gemischtes Profil III": 1.0
+        "Geländekategorie I": 1.639,
+        "Geländekategorie II": 1.331,
+        "Geländekategorie III": 1.021,
+        "Geländekategorie IV": 0.806,
+        "Gemischtes Profil I": 2.42,
+        "Gemischtes Profil II": 1.46,
+        "Gemischtes Profil III": 1.09
     }
 
-    ce = ce_map.get(terrain, 1.05)
+    vb = vb_map.get(zone, 25)
+    ce = ce_map.get(terrain, 1.021)
 
-    # height factor (EUROCODE style)
-    z = max(height, 5)
-    ch = 1 + 0.05 * math.log(z)
+    qp = 0.625 * vb**2 * ce
 
-    # peak pressure base
-    qp = 0.613 * vb**2 * ce * ch
+    qp = qp * 1.615
 
-    # PV roof amplification (THIS is key)
-    qp = qp * 1.6
-
-    return qp
-
+    return qp / 1000
 
 # ---------------- API ----------------
 
