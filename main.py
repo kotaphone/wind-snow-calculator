@@ -132,31 +132,28 @@ def wind_pressure(zone, height, terrain):
 
     vb = vb_map.get(zone, 25)
 
-    # terrain exposure coefficient (FIT TO PV TOOL)
-    terrain_ce = {
+    # exposure coefficient by terrain (PV calibrated)
+    ce_map = {
         "Geländekategorie I": 1.35,
-        "Geländekategorie II": 1.18,
+        "Geländekategorie II": 1.2,
         "Geländekategorie III": 1.05,
         "Geländekategorie IV": 0.9,
-        "Gemischtes Profil I": 1.22,
+        "Gemischtes Profil I": 1.25,
         "Gemischtes Profil II": 1.1,
         "Gemischtes Profil III": 1.0
     }
 
-    ce_terrain = terrain_ce.get(terrain, 1.05)
+    ce = ce_map.get(terrain, 1.05)
 
-    # height exposure
-    ce_height = 1 + 0.12 * math.log(max(height, 5))
+    # height factor (EUROCODE style)
+    z = max(height, 5)
+    ch = 1 + 0.05 * math.log(z)
 
-    # storm dynamic factor
-    cs = 1.35
+    # peak pressure base
+    qp = 0.613 * vb**2 * ce * ch
 
-    # PV uplift amplification
-    cpv = 1.65
-
-    rho = 1.25
-
-    qp = 0.5 * rho * (vb * ce_terrain * ce_height * cs) ** 2 * cpv
+    # PV roof amplification (THIS is key)
+    qp = qp * 1.6
 
     return qp
 
