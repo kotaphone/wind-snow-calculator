@@ -9,9 +9,25 @@ snow = gpd.read_file("snow.kml", driver="LIBKML")
 wind = gpd.read_file("wind.kml", driver="LIBKML")
 
 def geocode(address):
-    url = f"https://nominatim.openstreetmap.org/search?q={address}&format=json"
-    r = requests.get(url).json()
-    return float(r[0]["lat"]), float(r[0]["lon"])
+    url = "https://nominatim.openstreetmap.org/search"
+    params = {
+        "q": address,
+        "format": "json",
+        "limit": 1
+    }
+
+    headers = {
+        "User-Agent": "wind-snow-calculator"
+    }
+
+    r = requests.get(url, params=params, headers=headers, timeout=10)
+
+    data = r.json()
+
+    if len(data) == 0:
+        raise Exception("Address not found")
+
+    return float(data[0]["lat"]), float(data[0]["lon"])
 
 def elevation(lat, lon):
     url = f"https://api.open-elevation.com/api/v1/lookup?locations={lat},{lon}"
