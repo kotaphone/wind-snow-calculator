@@ -133,12 +133,9 @@ def wind_pressure(zone, height):
         "4": 0.95
     }
 
-    if zone not in base:
-        vb = 0.65
-    else:
-        vb = base[zone]
+    vb = base.get(zone, 0.65)
 
-    qp = vb * (1 + height / 20)
+    qp = vb * (0.8 + height / 40)
 
     return qp
 
