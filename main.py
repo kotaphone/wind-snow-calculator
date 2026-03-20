@@ -124,26 +124,43 @@ def snow_roof(zone, elevation, angle):
 
 # ---------------- WIND (simple realistic) ----------------
 
-def wind_pressure(zone, height):
+def wind_pressure(zone, height, terrain):
 
-    base = {
-        "1": 0.5,
-        "2": 0.65,
-        "3": 0.8,
-        "4": 0.95
+    vb_map = {
+        "1": 22.5,
+        "2": 25,
+        "3": 27.5,
+        "4": 30
     }
 
-    vb = base.get(zone, 0.65)
+    vb = vb_map.get(zone, 25)
 
-    qp = vb * (0.8 + height / 40)
+    # roughness length z0 DIN approx
+    z0_map = {
+        "Geländekategorie I": 0.003,
+        "Geländekategorie II": 0.05,
+        "Geländekategorie III": 0.3,
+        "Geländekategorie IV": 1.0,
+        "Gemischtes Profil I": 0.02,
+        "Gemischtes Profil II": 0.15,
+        "Gemischtes Profil III": 0.6
+    }
 
-    return qp
+    z0 = z0_map.get(terrain, 0.3)
 
+    if height < 5:
+        height = 5
+
+    ce = (1.0 * ( ( (height / z0) ) ** 0.19 ))
+
+    qp = 0.613 * vb * vb * ce
+
+    return qp / 1000
 
 # ---------------- API ----------------
 
 @app.get("/calc")
-def calc(address: str, roof_pitch: float, roof_height: float):
+def calc(address: str, roof_pitch: float, roof_height: float, terrain: str):
 
     lat, lon = geocode(address)
     h = elevation(lat, lon)
@@ -159,7 +176,7 @@ def calc(address: str, roof_pitch: float, roof_height: float):
     snow_regular = snow_kn * 1000
     snow_exceptional = exceptional_kn * 1000
 
-    wind_kn = wind_pressure(wind_zone, roof_height)
+    wind_kn = wind_pressure(wind_zone, roof_height, terrain)
     wind_n = wind_kn * 1000
 
     return {
