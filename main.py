@@ -30,9 +30,19 @@ def geocode(address):
     return float(data[0]["lat"]), float(data[0]["lon"])
 
 def elevation(lat, lon):
-    url = f"https://api.open-elevation.com/api/v1/lookup?locations={lat},{lon}"
-    r = requests.get(url, timeout=10)
-    return r.json()["results"][0]["elevation"]
+    try:
+        url = f"https://api.open-elevation.com/api/v1/lookup?locations={lat},{lon}"
+        r = requests.get(url, timeout=10)
+
+        if r.status_code != 200:
+            return 0
+
+        data = r.json()
+
+        return data["results"][0]["elevation"]
+
+    except:
+        return 0
 
 def get_zone(gdf, lat, lon):
     pt = Point(lon, lat)
