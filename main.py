@@ -112,13 +112,12 @@ def snow_roof(zone, elevation, angle):
 
     sk_ground = snow_ground(zone, elevation)
 
-    # Norddeutsches Tiefland
-    if "*" in zone:
-        sk_ground = sk_ground * 2.3
-
     m = mu(angle)
 
-    sk_roof = sk_ground * m
+    # roof reduction (PV planner like)
+    reduction = 0.5
+
+    sk_roof = sk_ground * m * reduction
 
     return sk_roof
 
