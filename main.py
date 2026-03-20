@@ -186,7 +186,7 @@ def calc(address: str, roof_pitch: float, roof_height: float, terrain: str):
     snow_regular = snow_kn * 1000
     snow_exceptional = snow_regular * 2.3
 
-    wind_n = wind_pressure(wind_zone, roof_height, terrain)
+    wind_n = wind_pressure_full(wind_zone, roof_height, terrain)
 
     return {
         "snow_zone": snow_zone,
