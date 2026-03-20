@@ -123,7 +123,6 @@ def snow_roof(zone, elevation, angle):
 
 def wind_pressure(zone, height, terrain):
 
-    # Basic wind velocity vb DIN Germany
     vb_map = {
         "1": 22.5,
         "2": 25.0,
@@ -133,7 +132,6 @@ def wind_pressure(zone, height, terrain):
 
     vb = vb_map.get(zone, 25.0)
 
-    # Terrain roughness length z0 DIN
     z0_map = {
         "Geländekategorie I": 0.003,
         "Geländekategorie II": 0.05,
@@ -146,20 +144,20 @@ def wind_pressure(zone, height, terrain):
 
     z0 = z0_map.get(terrain, 0.3)
 
-    # minimal reference height DIN
     z = max(height, 5)
 
-    # DIN exposure factor ce(z)
     kr = 0.19 * (z0 / 0.05) ** 0.07
     ce = (kr * math.log(z / z0)) ** 2
 
-    # peak velocity pressure
-    qp = 0.613 * vb ** 2 * ce
+    qp = 0.613 * vb ** 2 * ce   # N/m²
 
-    # PV mounting aerodynamic reduction (VERY IMPORTANT)
-    qp = qp * 0.9
+    # ===== PV TOOL ENGINE =====
+    cpe = 1.5
+    system = 1.05
 
-    return qp
+    windload = qp * cpe * system
+
+    return windload
 
 
 # ---------------- API ----------------
