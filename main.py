@@ -5,8 +5,8 @@ from shapely.geometry import Point
 
 app = FastAPI()
 
-snow = gpd.read_file("snow.kml")
-wind = gpd.read_file("wind.kml")
+snow = gpd.read_file("snow.kml", driver="LIBKML")
+wind = gpd.read_file("wind.kml", driver="LIBKML")
 
 def geocode(address):
     url = f"https://nominatim.openstreetmap.org/search?q={address}&format=json"
