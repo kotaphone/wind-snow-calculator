@@ -49,12 +49,9 @@ def get_zone(gdf, lat, lon):
     return "unknown"
 
 
-# ---------------- SNOW ENGINEERING ----------------
+# ---------------- SNOW (PV TOOL MODEL) ----------------
 
 def snow_ground(zone, elevation):
-    """
-    DIN EN 1991-1-3 Germany
-    """
 
     base = {
         "1": 0.65,
@@ -75,12 +72,11 @@ def snow_ground(zone, elevation):
     z = zone.replace("*", "")
 
     if z not in base:
-        return 0.8
+        return 0.85
 
     if elevation <= limits[z]:
         return base[z]
 
-    # height formula
     A = elevation
 
     if z in ["1", "1a"]:
@@ -99,30 +95,31 @@ def snow_ground(zone, elevation):
     return sk
 
 
-def mu(angle):
+# ⭐ PV realistic sliding model (IDENTICAL behaviour)
+
+def mu_pv(angle):
+
     if angle <= 30:
         return 0.8
-    elif angle <= 60:
-        return 0.8 * (60 - angle) / 30
-    else:
-        return 0
+
+    if angle <= 45:
+        return 0.8 - (angle - 30) * 0.0266667   # gives 0.4 at 45°
+
+    if angle <= 60:
+        return 0.4 - (angle - 45) * 0.0266667
+
+    return 0
 
 
 def snow_roof(zone, elevation, angle):
 
     sk_ground = snow_ground(zone, elevation)
+    mu = mu_pv(angle)
 
-    m = mu(angle)
-
-    # roof reduction (PV planner like)
-    reduction = 0.5
-
-    sk_roof = sk_ground * m * reduction
-
-    return sk_roof
+    return sk_ground * mu
 
 
-# ---------------- WIND (simple realistic) ----------------
+# ---------------- WIND (PV TOOL LIKE) ----------------
 
 def wind_pressure(zone, height, terrain):
 
@@ -135,27 +132,30 @@ def wind_pressure(zone, height, terrain):
 
     vb = vb_map.get(zone, 25)
 
-    # roughness length z0 DIN approx
-    z0_map = {
-        "Geländekategorie I": 0.003,
-        "Geländekategorie II": 0.05,
-        "Geländekategorie III": 0.3,
-        "Geländekategorie IV": 1.0,
-        "Gemischtes Profil I": 0.02,
-        "Gemischtes Profil II": 0.15,
-        "Gemischtes Profil III": 0.6
+    terrain_map = {
+        "Geländekategorie I": (0.003, 0.14),
+        "Geländekategorie II": (0.05, 0.16),
+        "Geländekategorie III": (0.3, 0.19),
+        "Geländekategorie IV": (1.0, 0.22),
+        "Gemischtes Profil I": (0.02, 0.15),
+        "Gemischtes Profil II": (0.15, 0.18),
+        "Gemischtes Profil III": (0.6, 0.20)
     }
 
-    z0 = z0_map.get(terrain, 0.3)
+    z0, alpha = terrain_map.get(terrain, (0.3, 0.19))
 
-    if height < 5:
-        height = 5
+    z = max(height, 10)
 
-    ce = (1.0 * ( ( (height / z0) ) ** 0.19 ))
+    # logarithmic wind profile (Eurocode style)
+    ce = (math.log(z / z0)) ** 2 * (alpha ** 2)
 
-    qp = 0.613 * vb * vb * ce
+    qp = 0.613 * vb ** 2 * ce
 
-    return qp / 1000
+    # PV system aerodynamic reduction
+    qp = qp * 0.78
+
+    return qp
+
 
 # ---------------- API ----------------
 
@@ -170,14 +170,10 @@ def calc(address: str, roof_pitch: float, roof_height: float, terrain: str):
 
     snow_kn = snow_roof(snow_zone, h, roof_pitch)
 
-    exceptional_kn = snow_kn * 2.3
-
-    # konwersja na N/m²
     snow_regular = snow_kn * 1000
-    snow_exceptional = exceptional_kn * 1000
+    snow_exceptional = snow_regular * 2.3
 
-    wind_kn = wind_pressure(wind_zone, roof_height, terrain)
-    wind_n = wind_kn * 1000
+    wind_n = wind_pressure(wind_zone, roof_height, terrain)
 
     return {
         "snow_zone": snow_zone,
