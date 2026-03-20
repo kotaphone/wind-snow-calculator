@@ -123,53 +123,88 @@ def snow_roof(zone, elevation, angle):
 
 import math
 
-def wind_pressure_full(
-        wind_zone,
-        height,
-        terrain,
-        altitude=0,
-        pv_factor=1.6):
+def interp_log(h, h1, h2, v1, v2):
 
-    vb0_map = {
-        1: 22.5,
-        2: 25.0,
-        3: 27.5,
-        4: 30.0
+    if h <= h1:
+        return v1
+    if h >= h2:
+        return v2
+
+    r = math.log(h / h1) / math.log(h2 / h1)
+
+    return v1 + (v2 - v1) * r
+
+
+def wind_pressure(zone, height, terrain):
+
+    # ====== TABELA PV TOOL ======
+
+    table = {
+        "2": {
+            "Geländekategorie I": {5: 890, 11: 1034, 15: 1097, 20: 1159},
+            "Geländekategorie II": {5: 695, 11: 839, 15: 904, 20: 969},
+            "Geländekategorie III": {5: 586, 11: 644, 15: 709, 20: 775},
+            "Geländekategorie IV": {5: 508, 11: 508, 15: 508, 20: 567},
+            "Gemischtes Profil I": {5: 1315, 11: 1527, 15: 1620, 20: 1711},
+            "Gemischtes Profil II": {5: 745, 11: 922, 15: 1002, 20: 1083},
+            "Gemischtes Profil III": {5: 586, 11: 688, 15: 722, 20: 858},
+        },
+
+        "1": {
+            "Geländekategorie I": {5: 721, 11: 838, 15: 889, 20: 939},
+            "Geländekategorie II": {5: 563, 11: 680, 15: 732, 20: 785},
+            "Geländekategorie III": {5: 475, 11: 521, 15: 574, 20: 628},
+            "Geländekategorie IV": {5: 411, 11: 411, 15: 411, 20: 459},
+            "Gemischtes Profil I": {5: 1315, 11: 1527, 15: 1620, 20: 1711},
+            "Gemischtes Profil II": {5: 604, 11: 747, 15: 812, 20: 878},
+            "Gemischtes Profil III": {5: 745, 11: 557, 15: 625, 20: 695},
+        },
+
+        "3": {
+            "Geländekategorie I": {5: 1077, 11: 1251, 15: 1327, 20: 1402},
+            "Geländekategorie II": {5: 841, 11: 1016, 15: 1094, 20: 1172},
+            "Geländekategorie III": {5: 709, 11: 779, 15: 858, 20: 938},
+            "Geländekategorie IV": {5: 615, 11: 614, 15: 615, 20: 686},
+            "Gemischtes Profil I": {5: 1315, 11: 1527, 15: 1620, 20: 1711},
+            "Gemischtes Profil II": {5: 902, 11: 1115, 15: 1213, 20: 1311},
+            "Gemischtes Profil III": {5: 709, 11: 832, 15: 934, 20: 1039},
+        },
+
+        "4": {
+            "Geländekategorie I": {5: 1282, 11: 1489, 15: 1580, 20: 1668},
+            "Geländekategorie II": {5: 1000, 11: 1209, 15: 1302, 20: 1395},
+            "Geländekategorie III": {5: 844, 11: 927, 15: 1021, 20: 1116},
+            "Geländekategorie IV": {5: 731, 11: 731, 15: 731, 20: 817},
+            "Gemischtes Profil I": {5: 1315, 11: 1528, 15: 1620, 20: 1711},
+            "Gemischtes Profil II": {5: 1073, 11: 1328, 15: 1444, 20: 1560},
+            "Gemischtes Profil III": {5: 844, 11: 991, 15: 1111, 20: 1236},
+        }
     }
 
-    z0_map = {
-        "Geländekategorie I": 0.003,
-        "Geländekategorie II": 0.05,
-        "Geländekategorie III": 0.3,
-        "Geländekategorie IV": 1.0,
-        "Gemischtes Profil I": 0.01,
-        "Gemischtes Profil II": 0.15,
-        "Gemischtes Profil III": 0.5
-    }
+    zone = zone.replace("*", "")
 
-    vb = vb0_map.get(wind_zone, 25)
+    if zone not in table:
+        return 600
 
-    # altitude correction (NA Germany approx)
-    vb = vb * (1 + altitude / 10000)
+    terrain_table = table[zone].get(terrain)
 
-    z0 = z0_map.get(terrain, 0.3)
+    if terrain_table is None:
+        return 600
 
-    z = max(height, 5)
+    heights = sorted(terrain_table.keys())
 
-    kr = 0.19 * (z0 / 0.05) ** 0.07
+    for i in range(len(heights) - 1):
 
-    cr = kr * math.log(z / z0)
+        h1 = heights[i]
+        h2 = heights[i + 1]
 
-    vm = vb * cr
+        if height <= h2:
+            v1 = terrain_table[h1]
+            v2 = terrain_table[h2]
 
-    Iv = 1.0 / (cr)
+            return interp_log(height, h1, h2, v1, v2)
 
-    qp = (1 + 7 * Iv) * 0.5 * 1.25 * vm**2
-
-    qp = qp * pv_factor
-
-    return qp / 1000
-
+    return terrain_table[heights[-1]]
 # ---------------- API ----------------
 
 @app.get("/calc")
@@ -186,7 +221,7 @@ def calc(address: str, roof_pitch: float, roof_height: float, terrain: str):
     snow_regular = snow_kn * 1000
     snow_exceptional = snow_regular * 2.3
 
-    wind_n = wind_pressure_full(wind_zone, roof_height, terrain)
+    wind_n = wind_pressure(wind_zone, roof_height, terrain)
 
     return {
         "snow_zone": snow_zone,
