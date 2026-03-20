@@ -123,32 +123,50 @@ def snow_roof(zone, elevation, angle):
 
 import math
 
-def wind_pressure(zone, height, terrain):
+def wind_pressure_full(
+        wind_zone,
+        height,
+        terrain,
+        altitude=0,
+        pv_factor=1.6):
 
-    vb_map = {
-        "1": 22.5,
-        "2": 25,
-        "3": 27.5,
-        "4": 30
+    vb0_map = {
+        1: 22.5,
+        2: 25.0,
+        3: 27.5,
+        4: 30.0
     }
 
-    # Solar.Pro.Tool calibrated exposure at ~10–12 m height
-    ce_map = {
-        "Geländekategorie I": 1.639,
-        "Geländekategorie II": 1.331,
-        "Geländekategorie III": 1.021,
-        "Geländekategorie IV": 0.806,
-        "Gemischtes Profil I": 2.42,
-        "Gemischtes Profil II": 1.46,
-        "Gemischtes Profil III": 1.09
+    z0_map = {
+        "Geländekategorie I": 0.003,
+        "Geländekategorie II": 0.05,
+        "Geländekategorie III": 0.3,
+        "Geländekategorie IV": 1.0,
+        "Gemischtes Profil I": 0.01,
+        "Gemischtes Profil II": 0.15,
+        "Gemischtes Profil III": 0.5
     }
 
-    vb = vb_map.get(zone, 25)
-    ce = ce_map.get(terrain, 1.021)
+    vb = vb0_map.get(wind_zone, 25)
 
-    qp = 0.625 * vb**2 * ce
+    # altitude correction (NA Germany approx)
+    vb = vb * (1 + altitude / 10000)
 
-    qp = qp * 1.615
+    z0 = z0_map.get(terrain, 0.3)
+
+    z = max(height, 5)
+
+    kr = 0.19 * (z0 / 0.05) ** 0.07
+
+    cr = kr * math.log(z / z0)
+
+    vm = vb * cr
+
+    Iv = 1.0 / (cr)
+
+    qp = (1 + 7 * Iv) * 0.5 * 1.25 * vm**2
+
+    qp = qp * pv_factor
 
     return qp / 1000
 
