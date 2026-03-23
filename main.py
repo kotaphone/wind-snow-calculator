@@ -231,8 +231,15 @@ def calc(address: str, roof_pitch: float, roof_height: float, terrain: str):
         snow_zone = get_zone(snow, lat, lon)
         wind_zone = get_zone(wind, lat, lon)
 
+        
         snow_kn = snow_roof(snow_zone, h, roof_pitch)
+
+        is_exceptional = "*" in snow_zone
+
+        if is_exceptional:
         snow_exceptional = snow_kn * 2.3
+        else:
+        snow_exceptional = snow_kn
 
         wind_kn = wind_pressure(wind_zone, roof_height, terrain)
 
@@ -243,6 +250,7 @@ def calc(address: str, roof_pitch: float, roof_height: float, terrain: str):
             "snow_exceptional": round(snow_exceptional, 3),
             "wind_pressure": round(wind_kn, 3),
             "elevation": round(h, 1)
+            "is_exceptional": is_exceptional,
         }
 
     except Exception:
