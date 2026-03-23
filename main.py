@@ -1,4 +1,5 @@
 from fastapi import FastAPI
+from fastapi.responses import JSONResponse
 import requests
 import geopandas as gpd
 from shapely.geometry import Point
@@ -9,24 +10,34 @@ app = FastAPI()
 snow = gpd.read_file("snow.kml", driver="LIBKML")
 wind = gpd.read_file("wind.kml", driver="LIBKML")
 
-
 # ---------------- GEO ----------------
 
 def geocode(address):
+
     url = "https://nominatim.openstreetmap.org/search"
-    params = {"q": address, "format": "json", "limit": 1}
-    headers = {"User-Agent": "wind-snow-calculator"}
+
+    params = {
+        "q": address,
+        "format": "json",
+        "limit": 1
+    }
+
+    headers = {
+        "User-Agent": "wind-snow-calculator"
+    }
 
     r = requests.get(url, params=params, headers=headers, timeout=10)
+
     data = r.json()
 
     if len(data) == 0:
-        raise Exception("Address not found")
+        raise Exception("Adresse nicht gefunden")
 
     return float(data[0]["lat"]), float(data[0]["lon"])
 
 
 def elevation(lat, lon):
+
     try:
         url = f"https://api.open-elevation.com/api/v1/lookup?locations={lat},{lon}"
         r = requests.get(url, timeout=10)
@@ -35,6 +46,7 @@ def elevation(lat, lon):
             return 0
 
         data = r.json()
+
         return data["results"][0]["elevation"]
 
     except:
@@ -42,14 +54,17 @@ def elevation(lat, lon):
 
 
 def get_zone(gdf, lat, lon):
+
     pt = Point(lon, lat)
+
     res = gdf[gdf.contains(pt)]
+
     if len(res) > 0:
         return str(res.iloc[0]["Name"])
+
     return "unknown"
 
-
-# ---------------- SNOW (PV TOOL MODEL) ----------------
+# ---------------- SCHNEE ----------------
 
 def snow_ground(zone, elevation):
 
@@ -95,15 +110,13 @@ def snow_ground(zone, elevation):
     return sk
 
 
-# ⭐ PV realistic sliding model (IDENTICAL behaviour)
-
 def mu_pv(angle):
 
     if angle <= 30:
         return 0.8
 
     if angle <= 45:
-        return 0.8 - (angle - 30) * 0.0266667   # gives 0.4 at 45°
+        return 0.8 - (angle - 30) * 0.0266667
 
     if angle <= 60:
         return 0.4 - (angle - 45) * 0.0266667
@@ -114,19 +127,19 @@ def mu_pv(angle):
 def snow_roof(zone, elevation, angle):
 
     sk_ground = snow_ground(zone, elevation)
+
     mu = mu_pv(angle)
 
     return sk_ground * mu
 
 
-# ---------------- WIND (PV TOOL LIKE) ----------------
-
-import math
+# ---------------- WIND ----------------
 
 def interp_log(h, h1, h2, v1, v2):
 
     if h <= h1:
         return v1
+
     if h >= h2:
         return v2
 
@@ -137,59 +150,57 @@ def interp_log(h, h1, h2, v1, v2):
 
 def wind_pressure(zone, height, terrain):
 
-    # ====== TABELA PV TOOL ======
-
     table = {
         "2": {
-            "Geländekategorie I": {5: 890, 11: 1034, 15: 1097, 20: 1159},
-            "Geländekategorie II": {5: 695, 11: 839, 15: 904, 20: 969},
-            "Geländekategorie III": {5: 586, 11: 644, 15: 709, 20: 775},
-            "Geländekategorie IV": {5: 508, 11: 508, 15: 508, 20: 567},
-            "Gemischtes Profil I": {5: 1315, 11: 1527, 15: 1620, 20: 1711},
-            "Gemischtes Profil II": {5: 745, 11: 922, 15: 1002, 20: 1083},
-            "Gemischtes Profil III": {5: 586, 11: 688, 15: 722, 20: 858},
+            "Geländekategorie I": {5: 0.890, 11: 1.034, 15: 1.097, 20: 1.159},
+            "Geländekategorie II": {5: 0.695, 11: 0.839, 15: 0.904, 20: 0.969},
+            "Geländekategorie III": {5: 0.586, 11: 0.644, 15: 0.709, 20: 0.775},
+            "Geländekategorie IV": {5: 0.508, 11: 0.508, 15: 0.508, 20: 0.567},
+            "Gemischtes Profil I": {5: 1.315, 11: 1.527, 15: 1.620, 20: 1.711},
+            "Gemischtes Profil II": {5: 0.745, 11: 0.922, 15: 1.002, 20: 1.083},
+            "Gemischtes Profil III": {5: 0.586, 11: 0.688, 15: 0.722, 20: 0.858},
         },
 
         "1": {
-            "Geländekategorie I": {5: 721, 11: 838, 15: 889, 20: 939},
-            "Geländekategorie II": {5: 563, 11: 680, 15: 732, 20: 785},
-            "Geländekategorie III": {5: 475, 11: 521, 15: 574, 20: 628},
-            "Geländekategorie IV": {5: 411, 11: 411, 15: 411, 20: 459},
-            "Gemischtes Profil I": {5: 1315, 11: 1527, 15: 1620, 20: 1711},
-            "Gemischtes Profil II": {5: 604, 11: 747, 15: 812, 20: 878},
-            "Gemischtes Profil III": {5: 745, 11: 557, 15: 625, 20: 695},
+            "Geländekategorie I": {5: 0.721, 11: 0.838, 15: 0.889, 20: 0.939},
+            "Geländekategorie II": {5: 0.563, 11: 0.680, 15: 0.732, 20: 0.785},
+            "Geländekategorie III": {5: 0.475, 11: 0.521, 15: 0.574, 20: 0.628},
+            "Geländekategorie IV": {5: 0.411, 11: 0.411, 15: 0.411, 20: 0.459},
+            "Gemischtes Profil I": {5: 1.315, 11: 1.527, 15: 1.620, 20: 1.711},
+            "Gemischtes Profil II": {5: 0.604, 11: 0.747, 15: 0.812, 20: 0.878},
+            "Gemischtes Profil III": {5: 0.745, 11: 0.557, 15: 0.625, 20: 0.695},
         },
 
         "3": {
-            "Geländekategorie I": {5: 1077, 11: 1251, 15: 1327, 20: 1402},
-            "Geländekategorie II": {5: 841, 11: 1016, 15: 1094, 20: 1172},
-            "Geländekategorie III": {5: 709, 11: 779, 15: 858, 20: 938},
-            "Geländekategorie IV": {5: 615, 11: 614, 15: 615, 20: 686},
-            "Gemischtes Profil I": {5: 1315, 11: 1527, 15: 1620, 20: 1711},
-            "Gemischtes Profil II": {5: 902, 11: 1115, 15: 1213, 20: 1311},
-            "Gemischtes Profil III": {5: 709, 11: 832, 15: 934, 20: 1039},
+            "Geländekategorie I": {5: 1.077, 11: 1.251, 15: 1.327, 20: 1.402},
+            "Geländekategorie II": {5: 0.841, 11: 1.016, 15: 1.094, 20: 1.172},
+            "Geländekategorie III": {5: 0.709, 11: 0.779, 15: 0.858, 20: 0.938},
+            "Geländekategorie IV": {5: 0.615, 11: 0.614, 15: 0.615, 20: 0.686},
+            "Gemischtes Profil I": {5: 1.315, 11: 1.527, 15: 1.620, 20: 1.711},
+            "Gemischtes Profil II": {5: 0.902, 11: 1.115, 15: 1.213, 20: 1.311},
+            "Gemischtes Profil III": {5: 0.709, 11: 0.832, 15: 0.934, 20: 1.039},
         },
 
         "4": {
-            "Geländekategorie I": {5: 1282, 11: 1489, 15: 1580, 20: 1668},
-            "Geländekategorie II": {5: 1000, 11: 1209, 15: 1302, 20: 1395},
-            "Geländekategorie III": {5: 844, 11: 927, 15: 1021, 20: 1116},
-            "Geländekategorie IV": {5: 731, 11: 731, 15: 731, 20: 817},
-            "Gemischtes Profil I": {5: 1315, 11: 1528, 15: 1620, 20: 1711},
-            "Gemischtes Profil II": {5: 1073, 11: 1328, 15: 1444, 20: 1560},
-            "Gemischtes Profil III": {5: 844, 11: 991, 15: 1111, 20: 1236},
+            "Geländekategorie I": {5: 1.282, 11: 1.489, 15: 1.580, 20: 1.668},
+            "Geländekategorie II": {5: 1.000, 11: 1.209, 15: 1.302, 20: 1.395},
+            "Geländekategorie III": {5: 0.844, 11: 0.927, 15: 1.021, 20: 1.116},
+            "Geländekategorie IV": {5: 0.731, 11: 0.731, 15: 0.731, 20: 0.817},
+            "Gemischtes Profil I": {5: 1.315, 11: 1.528, 15: 1.620, 20: 1.711},
+            "Gemischtes Profil II": {5: 1.073, 11: 1.328, 15: 1.444, 20: 1.560},
+            "Gemischtes Profil III": {5: 0.844, 11: 0.991, 15: 1.111, 20: 1.236},
         }
     }
 
     zone = zone.replace("*", "")
 
     if zone not in table:
-        return 600
+        return 0.60
 
     terrain_table = table[zone].get(terrain)
 
     if terrain_table is None:
-        return 600
+        return 0.60
 
     heights = sorted(terrain_table.keys())
 
@@ -199,35 +210,44 @@ def wind_pressure(zone, height, terrain):
         h2 = heights[i + 1]
 
         if height <= h2:
+
             v1 = terrain_table[h1]
             v2 = terrain_table[h2]
 
             return interp_log(height, h1, h2, v1, v2)
 
     return terrain_table[heights[-1]]
+
 # ---------------- API ----------------
 
 @app.get("/calc")
 def calc(address: str, roof_pitch: float, roof_height: float, terrain: str):
 
-    lat, lon = geocode(address)
-    h = elevation(lat, lon)
+    try:
 
-    snow_zone = get_zone(snow, lat, lon)
-    wind_zone = get_zone(wind, lat, lon)
+        lat, lon = geocode(address)
+        h = elevation(lat, lon)
 
-    snow_kn = snow_roof(snow_zone, h, roof_pitch)
+        snow_zone = get_zone(snow, lat, lon)
+        wind_zone = get_zone(wind, lat, lon)
 
-    snow_regular = snow_kn * 1000
-    snow_exceptional = snow_regular * 2.3
+        snow_kn = snow_roof(snow_zone, h, roof_pitch)
+        snow_exceptional = snow_kn * 2.3
 
-    wind_n = wind_pressure(wind_zone, roof_height, terrain)
+        wind_kn = wind_pressure(wind_zone, roof_height, terrain)
 
-    return {
-        "snow_zone": snow_zone,
-        "wind_zone": wind_zone,
-        "snow_regular": round(snow_regular, 2),
-        "snow_exceptional": round(snow_exceptional, 2),
-        "wind_pressure": round(wind_n, 2),
-        "elevation": round(h, 1)
-    }
+        return {
+            "snow_zone": snow_zone,
+            "wind_zone": wind_zone,
+            "snow_regular": round(snow_kn, 3),
+            "snow_exceptional": round(snow_exceptional, 3),
+            "wind_pressure": round(wind_kn, 3),
+            "elevation": round(h, 1)
+        }
+
+    except Exception:
+
+        return JSONResponse(
+            status_code=200,
+            content={"error": "Serverfehler — Eingabedaten prüfen"}
+        )
