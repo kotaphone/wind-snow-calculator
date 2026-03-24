@@ -1,11 +1,24 @@
 from fastapi import FastAPI
 from fastapi.responses import JSONResponse
+from fastapi.middleware.cors import CORSMiddleware
+
 import requests
 import geopandas as gpd
 from shapely.geometry import Point
 import math
 
 app = FastAPI()
+
+# ⭐⭐⭐⭐⭐ CORS — tylko to dodaliśmy ⭐⭐⭐⭐⭐
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+# ⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐
+
 
 snow = gpd.read_file("snow.kml", driver="LIBKML")
 wind = gpd.read_file("wind.kml", driver="LIBKML")
@@ -160,7 +173,6 @@ def wind_pressure(zone, height, terrain):
             "Gemischtes Profil II": {5: 0.745, 11: 0.922, 15: 1.002, 20: 1.083},
             "Gemischtes Profil III": {5: 0.586, 11: 0.688, 15: 0.722, 20: 0.858},
         },
-
         "1": {
             "Geländekategorie I": {5: 0.721, 11: 0.838, 15: 0.889, 20: 0.939},
             "Geländekategorie II": {5: 0.563, 11: 0.680, 15: 0.732, 20: 0.785},
@@ -170,7 +182,6 @@ def wind_pressure(zone, height, terrain):
             "Gemischtes Profil II": {5: 0.604, 11: 0.747, 15: 0.812, 20: 0.878},
             "Gemischtes Profil III": {5: 0.745, 11: 0.557, 15: 0.625, 20: 0.695},
         },
-
         "3": {
             "Geländekategorie I": {5: 1.077, 11: 1.251, 15: 1.327, 20: 1.402},
             "Geländekategorie II": {5: 0.841, 11: 1.016, 15: 1.094, 20: 1.172},
@@ -180,7 +191,6 @@ def wind_pressure(zone, height, terrain):
             "Gemischtes Profil II": {5: 0.902, 11: 1.115, 15: 1.213, 20: 1.311},
             "Gemischtes Profil III": {5: 0.709, 11: 0.832, 15: 0.934, 20: 1.039},
         },
-
         "4": {
             "Geländekategorie I": {5: 1.282, 11: 1.489, 15: 1.580, 20: 1.668},
             "Geländekategorie II": {5: 1.000, 11: 1.209, 15: 1.302, 20: 1.395},
