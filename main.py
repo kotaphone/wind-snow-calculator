@@ -9,7 +9,6 @@ import math
 
 app = FastAPI()
 
-# ⭐⭐⭐⭐⭐ CORS ⭐⭐⭐⭐⭐
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -20,6 +19,7 @@ app.add_middleware(
 
 snow = gpd.read_file("snow.kml", driver="LIBKML")
 wind = gpd.read_file("wind.kml", driver="LIBKML")
+
 
 # ---------------- GEO ----------------
 
@@ -68,7 +68,8 @@ def get_zone(gdf, lat, lon):
 
     pt = Point(lon, lat)
 
-    res = gdf[gdf.contains(pt)]
+    # ⭐ WAŻNE — boundary safe
+    res = gdf[gdf.intersects(pt)]
 
     if len(res) > 0:
         return str(res.iloc[0]["Name"])
@@ -80,16 +81,21 @@ def get_zone(gdf, lat, lon):
 
 def normalize_snow_zone(zone):
 
-    # ⭐⭐⭐ SPECJALNY WYJĄTEK ⭐⭐⭐
-    if zone == "1a*":
+    if zone is None:
+        return "unknown", False
+
+    z = zone.strip().replace(" ", "")
+
+    # ⭐ Bayern wyjątek
+    if z == "1a*":
         return "1a", False
 
-    # Norddeutsches Flachland
-    if zone in ["1*", "2*"]:
-        return zone.replace("*", ""), True
+    # ⭐ Norddeutsches Flachland
+    if z in ["1*", "2*"]:
+        return z.replace("*", ""), True
 
-    # normalne strefy
-    return zone.replace("*", ""), False
+    # ⭐ wszystkie inne traktujemy jako normalne
+    return z.replace("*", ""), False
 
 
 # ---------------- SCHNEE ----------------
@@ -176,7 +182,7 @@ def interp_log(h, h1, h2, v1, v2):
 def wind_pressure(zone, height, terrain):
 
     table = {
-        # (tabela bez zmian — zostawiam skróconą dla czytelności)
+        # Twoja tabela bez zmian
     }
 
     zone = zone.replace("*", "")
@@ -225,12 +231,14 @@ def calc(address: str, roof_pitch: float, roof_height: float, terrain: str):
 
         snow_exceptional = snow_kn * 2.3 if is_exceptional else snow_kn
 
+        wind_kn = wind_pressure(wind_zone, roof_height, terrain)
+
         return {
             "snow_zone": snow_zone,
             "wind_zone": wind_zone,
             "snow_regular": round(snow_kn, 3),
             "snow_exceptional": round(snow_exceptional, 3),
-            "wind_pressure": round(wind_pressure(wind_zone, roof_height, terrain), 3),
+            "wind_pressure": round(wind_kn, 3),
             "elevation": round(h, 1),
             "is_exceptional": is_exceptional
         }
