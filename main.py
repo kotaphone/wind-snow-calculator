@@ -170,8 +170,6 @@ table = {
         "Geländekategorie II": {5: 0.695, 11: 0.839, 15: 0.904, 20: 0.969},
         "Geländekategorie III": {5: 0.586, 11: 0.644, 15: 0.709, 20: 0.775},
         "Geländekategorie IV": {5: 0.508, 11: 0.508, 15: 0.508, 20: 0.567},
-
-        # ⭐ ZAMIENIONE
         "Gemischtes Profil I": {5: 0.586, 11: 0.688, 15: 0.722, 20: 0.858},
         "Gemischtes Profil II": {5: 0.745, 11: 0.922, 15: 1.002, 20: 1.083},
         "Gemischtes Profil III": {5: 1.315, 11: 1.527, 15: 1.620, 20: 1.711},
@@ -182,8 +180,6 @@ table = {
         "Geländekategorie II": {5: 0.563, 11: 0.680, 15: 0.732, 20: 0.785},
         "Geländekategorie III": {5: 0.475, 11: 0.521, 15: 0.574, 20: 0.628},
         "Geländekategorie IV": {5: 0.411, 11: 0.411, 15: 0.411, 20: 0.459},
-
-        # ⭐ ZAMIENIONE
         "Gemischtes Profil I": {5: 0.745, 11: 0.557, 15: 0.625, 20: 0.695},
         "Gemischtes Profil II": {5: 0.604, 11: 0.747, 15: 0.812, 20: 0.878},
         "Gemischtes Profil III": {5: 1.315, 11: 1.527, 15: 1.620, 20: 1.711},
@@ -194,8 +190,6 @@ table = {
         "Geländekategorie II": {5: 0.841, 11: 1.016, 15: 1.094, 20: 1.172},
         "Geländekategorie III": {5: 0.709, 11: 0.779, 15: 0.858, 20: 0.938},
         "Geländekategorie IV": {5: 0.615, 11: 0.614, 15: 0.615, 20: 0.686},
-
-        # ⭐ ZAMIENIONE
         "Gemischtes Profil I": {5: 0.709, 11: 0.832, 15: 0.934, 20: 1.039},
         "Gemischtes Profil II": {5: 0.902, 11: 1.115, 15: 1.213, 20: 1.311},
         "Gemischtes Profil III": {5: 1.315, 11: 1.527, 15: 1.620, 20: 1.711},
@@ -206,8 +200,6 @@ table = {
         "Geländekategorie II": {5: 1.000, 11: 1.209, 15: 1.302, 20: 1.395},
         "Geländekategorie III": {5: 0.844, 11: 0.927, 15: 1.021, 20: 1.116},
         "Geländekategorie IV": {5: 0.731, 11: 0.731, 15: 0.731, 20: 0.817},
-
-        # ⭐ ZAMIENIONE
         "Gemischtes Profil I": {5: 0.844, 11: 0.991, 15: 1.111, 20: 1.236},
         "Gemischtes Profil II": {5: 1.073, 11: 1.328, 15: 1.444, 20: 1.560},
         "Gemischtes Profil III": {5: 1.315, 11: 1.528, 15: 1.620, 20: 1.711},
