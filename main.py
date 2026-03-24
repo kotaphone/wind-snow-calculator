@@ -163,76 +163,73 @@ def interp_log(h, h1, h2, v1, v2):
 
 def wind_pressure(zone, height, terrain):
 
-```
-table = {
-    "2": {
-        "Geländekategorie I": {5: 0.890, 11: 1.034, 15: 1.097, 20: 1.159},
-        "Geländekategorie II": {5: 0.695, 11: 0.839, 15: 0.904, 20: 0.969},
-        "Geländekategorie III": {5: 0.586, 11: 0.644, 15: 0.709, 20: 0.775},
-        "Geländekategorie IV": {5: 0.508, 11: 0.508, 15: 0.508, 20: 0.567},
-        "Gemischtes Profil I": {5: 0.586, 11: 0.688, 15: 0.722, 20: 0.858},
-        "Gemischtes Profil II": {5: 0.745, 11: 0.922, 15: 1.002, 20: 1.083},
-        "Gemischtes Profil III": {5: 1.315, 11: 1.527, 15: 1.620, 20: 1.711},
-    },
+    table = {
+        "2": {
+            "Geländekategorie I": {5: 0.890, 11: 1.034, 15: 1.097, 20: 1.159},
+            "Geländekategorie II": {5: 0.695, 11: 0.839, 15: 0.904, 20: 0.969},
+            "Geländekategorie III": {5: 0.586, 11: 0.644, 15: 0.709, 20: 0.775},
+            "Geländekategorie IV": {5: 0.508, 11: 0.508, 15: 0.508, 20: 0.567},
+            "Gemischtes Profil I": {5: 0.586, 11: 0.688, 15: 0.722, 20: 0.858},
+            "Gemischtes Profil II": {5: 0.745, 11: 0.922, 15: 1.002, 20: 1.083},
+            "Gemischtes Profil III": {5: 1.315, 11: 1.527, 15: 1.620, 20: 1.711},
+        },
 
-    "1": {
-        "Geländekategorie I": {5: 0.721, 11: 0.838, 15: 0.889, 20: 0.939},
-        "Geländekategorie II": {5: 0.563, 11: 0.680, 15: 0.732, 20: 0.785},
-        "Geländekategorie III": {5: 0.475, 11: 0.521, 15: 0.574, 20: 0.628},
-        "Geländekategorie IV": {5: 0.411, 11: 0.411, 15: 0.411, 20: 0.459},
-        "Gemischtes Profil I": {5: 0.745, 11: 0.557, 15: 0.625, 20: 0.695},
-        "Gemischtes Profil II": {5: 0.604, 11: 0.747, 15: 0.812, 20: 0.878},
-        "Gemischtes Profil III": {5: 1.315, 11: 1.527, 15: 1.620, 20: 1.711},
-    },
+        "1": {
+            "Geländekategorie I": {5: 0.721, 11: 0.838, 15: 0.889, 20: 0.939},
+            "Geländekategorie II": {5: 0.563, 11: 0.680, 15: 0.732, 20: 0.785},
+            "Geländekategorie III": {5: 0.475, 11: 0.521, 15: 0.574, 20: 0.628},
+            "Geländekategorie IV": {5: 0.411, 11: 0.411, 15: 0.411, 20: 0.459},
+            "Gemischtes Profil I": {5: 0.745, 11: 0.557, 15: 0.625, 20: 0.695},
+            "Gemischtes Profil II": {5: 0.604, 11: 0.747, 15: 0.812, 20: 0.878},
+            "Gemischtes Profil III": {5: 1.315, 11: 1.527, 15: 1.620, 20: 1.711},
+        },
 
-    "3": {
-        "Geländekategorie I": {5: 1.077, 11: 1.251, 15: 1.327, 20: 1.402},
-        "Geländekategorie II": {5: 0.841, 11: 1.016, 15: 1.094, 20: 1.172},
-        "Geländekategorie III": {5: 0.709, 11: 0.779, 15: 0.858, 20: 0.938},
-        "Geländekategorie IV": {5: 0.615, 11: 0.614, 15: 0.615, 20: 0.686},
-        "Gemischtes Profil I": {5: 0.709, 11: 0.832, 15: 0.934, 20: 1.039},
-        "Gemischtes Profil II": {5: 0.902, 11: 1.115, 15: 1.213, 20: 1.311},
-        "Gemischtes Profil III": {5: 1.315, 11: 1.527, 15: 1.620, 20: 1.711},
-    },
+        "3": {
+            "Geländekategorie I": {5: 1.077, 11: 1.251, 15: 1.327, 20: 1.402},
+            "Geländekategorie II": {5: 0.841, 11: 1.016, 15: 1.094, 20: 1.172},
+            "Geländekategorie III": {5: 0.709, 11: 0.779, 15: 0.858, 20: 0.938},
+            "Geländekategorie IV": {5: 0.615, 11: 0.614, 15: 0.615, 20: 0.686},
+            "Gemischtes Profil I": {5: 0.709, 11: 0.832, 15: 0.934, 20: 1.039},
+            "Gemischtes Profil II": {5: 0.902, 11: 1.115, 15: 1.213, 20: 1.311},
+            "Gemischtes Profil III": {5: 1.315, 11: 1.527, 15: 1.620, 20: 1.711},
+        },
 
-    "4": {
-        "Geländekategorie I": {5: 1.282, 11: 1.489, 15: 1.580, 20: 1.668},
-        "Geländekategorie II": {5: 1.000, 11: 1.209, 15: 1.302, 20: 1.395},
-        "Geländekategorie III": {5: 0.844, 11: 0.927, 15: 1.021, 20: 1.116},
-        "Geländekategorie IV": {5: 0.731, 11: 0.731, 15: 0.731, 20: 0.817},
-        "Gemischtes Profil I": {5: 0.844, 11: 0.991, 15: 1.111, 20: 1.236},
-        "Gemischtes Profil II": {5: 1.073, 11: 1.328, 15: 1.444, 20: 1.560},
-        "Gemischtes Profil III": {5: 1.315, 11: 1.528, 15: 1.620, 20: 1.711},
+        "4": {
+            "Geländekategorie I": {5: 1.282, 11: 1.489, 15: 1.580, 20: 1.668},
+            "Geländekategorie II": {5: 1.000, 11: 1.209, 15: 1.302, 20: 1.395},
+            "Geländekategorie III": {5: 0.844, 11: 0.927, 15: 1.021, 20: 1.116},
+            "Geländekategorie IV": {5: 0.731, 11: 0.731, 15: 0.731, 20: 0.817},
+            "Gemischtes Profil I": {5: 0.844, 11: 0.991, 15: 1.111, 20: 1.236},
+            "Gemischtes Profil II": {5: 1.073, 11: 1.328, 15: 1.444, 20: 1.560},
+            "Gemischtes Profil III": {5: 1.315, 11: 1.528, 15: 1.620, 20: 1.711},
+        }
     }
-}
 
-zone = zone.replace("*", "")
+    zone = zone.replace("*", "")
 
-if zone not in table:
-    return 0.60
+    if zone not in table:
+        return 0.60
 
-terrain_table = table[zone].get(terrain)
+    terrain_table = table[zone].get(terrain)
 
-if terrain_table is None:
-    return 0.60
+    if terrain_table is None:
+        return 0.60
 
-heights = sorted(terrain_table.keys())
+    heights = sorted(terrain_table.keys())
 
-for i in range(len(heights) - 1):
+    for i in range(len(heights) - 1):
 
-    h1 = heights[i]
-    h2 = heights[i + 1]
+        h1 = heights[i]
+        h2 = heights[i + 1]
 
-    if height <= h2:
+        if height <= h2:
 
-        v1 = terrain_table[h1]
-        v2 = terrain_table[h2]
+            v1 = terrain_table[h1]
+            v2 = terrain_table[h2]
 
-        return interp_log(height, h1, h2, v1, v2)
+            return interp_log(height, h1, h2, v1, v2)
 
-return terrain_table[heights[-1]]
-```
-
+    return terrain_table[heights[-1]]
 
 # ---------------- API ----------------
 
