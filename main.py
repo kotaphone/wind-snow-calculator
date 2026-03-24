@@ -85,7 +85,7 @@ def normalize_snow_zone(zone):
         return "1a", False
 
     # Norddeutsches Flachland
-    if zone in ["1*", "2*", "3*"]:
+    if zone in ["1*", "2*"]:
         return zone.replace("*", ""), True
 
     # normalne strefy
