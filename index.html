@@ -175,7 +175,6 @@ border-bottom:1px solid #e5e7eb;
 
 <button class="btn" onclick="calc()">Berechnen</button>
 
-
 <div id="status" class="status loading" style="display:none"></div>
 
 <div id="results" class="results">
@@ -217,6 +216,14 @@ border-bottom:1px solid #e5e7eb;
 </div>
 
 <script>
+
+/* ENTER = BERECHNEN */
+
+document.addEventListener("keydown",function(e){
+if(e.key==="Enter"){
+calc()
+}
+})
 
 function clampInputs(){
 
@@ -275,35 +282,43 @@ document.getElementById("snow").innerHTML=j.snow_regular.toFixed(2)+" kN/m²"
 document.getElementById("snowEx").innerHTML=j.snow_exceptional.toFixed(2)+" kN/m²"
 
 let flat=j.snow_zone.includes("*")
-
 document.getElementById("flat").innerHTML = flat ? "✔" : "-"
 
-/* ===== HINWEIS LOGIC ===== */
+/* ===== NOWE HINWEISE SL-RACK ===== */
 
-if(j.snow_regular>2.001){
+if(j.snow_regular>=2.401){
+hinweis.style.display="block"
+hinweis.innerHTML="Individuelle Berechnung nötig!"
+}
+else if(j.snow_regular>=2.101){
+hinweis.style.display="block"
+hinweis.innerHTML="Alphaplatten einsetzen! <br>Nur Hochkant Belegung mit SL-Rack möglich. <br>Quer und Misch Belegung nicht möglich."
+}
+else if(j.snow_regular>=1.601){
+hinweis.style.display="block"
+hinweis.innerHTML="Belegung nur mit SL-Rack möglich."
+}
 
+/* ===== STARE HINWEISE ===== */
+
+else if(j.snow_regular>2.001){
 hinweis.style.display="block"
 hinweis.innerHTML="Alphaplatten einsetzen."
-
 }
 else{
 
 if(flat){
 
 if(j.snow_exceptional>0.851 && pitch<30){
-
 hinweis.style.display="block"
 hinweis.innerHTML="ESDEC - Kein Einzelmodul unter 30° Dachneigung möglich."
-
 }
 
 }else{
 
 if(j.snow_regular>0.851){
-
 hinweis.style.display="block"
 hinweis.innerHTML="ESDEC - Kein Einzelmodul möglich."
-
 }
 
 }
