@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <meta charset="UTF-8">
 <title>Wind & Schneelast Rechner</title>
 
@@ -146,7 +147,107 @@ border-bottom:1px solid #e5e7eb;
 color:#9ca3af;
 font-weight:600;
 }
+
+.two-col{
+display:flex;
+gap:30px;
+align-items:flex-start;
+}
+
+.left-col{
+flex:1;
+display:flex;
+flex-direction:column;
+gap:18px;
+}
+
+.right-col{
+flex:1;
+}
+
+#map{
+height:420px;
+width:100%;
+}
+
+#searchResults{
+position:absolute;
+top:58px;
+left:0;
+width:470px;
+background:#f3f4f6;
+border-radius:16px;
+box-shadow:0 20px 40px rgba(0,0,0,0.15);
+overflow:hidden;
+z-index:999;
+}
+
+.searchItem{
+padding:14px 18px;
+cursor:pointer;
+border-bottom:1px solid #e5e7eb;
+background:#f9fafb;
+transition:0.15s;
+}
+
+.searchItem:hover{
+background:white;
+}
+
+.searchStreet{
+font-weight:600;
+font-size:15px;
+}
+
+.searchCity{
+font-size:12px;
+color:#6b7280;
+margin-top:2px;
+}
+
+.panel{
+overflow:visible;
+}
+
+.row{
+position:relative;
+}
+
+@media (max-width: 900px){
+
+.panel{
+width:92%;
+padding:24px;
+margin:-60px auto 40px auto;
+}
+
+.hero-inner{
+width:92%;
+}
+
+.hero h1{
+font-size:32px;
+}
+
+.two-col{
+flex-direction:column;
+}
+
+#map{
+height:320px;
+}
+
+#searchResults{
+width:100% !important;
+left:0 !important;
+}
+
+}
+
 </style>
+
+<link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 </head>
 
 <body>
@@ -161,9 +262,12 @@ font-weight:600;
 
 <div class="row">
 <input id="address" placeholder="Adresse eingeben">
+<div id="searchResults"></div>
 </div>
+<div class="two-col">
 
-<div class="row">
+<div class="left-col">
+
 <select id="terrain">
 <option>Geländekategorie I</option>
 <option>Geländekategorie II</option>
@@ -176,11 +280,18 @@ font-weight:600;
 
 <input id="pitch" type="number" placeholder="Dachneigung °">
 <input id="height" type="number" placeholder="Gebäudehöhe m">
-</div>
 
 <button class="btn" onclick="calc()">Berechnen</button>
 
 <div id="status" class="status loading" style="display:none"></div>
+
+</div>
+
+<div class="right-col">
+<div id="map" style="margin-top:0;border-radius:16px"></div>
+</div>
+
+</div>
 
 <div id="results" class="results">
 
@@ -256,6 +367,26 @@ clampInputs()
 async function calc(){
 
 let addr=document.getElementById("address").value
+try{
+
+let geoUrl = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(addr)}&countrycodes=de`
+let geoRes = await fetch(geoUrl)
+let geoData = await geoRes.json()
+
+if(geoData && geoData.length){
+
+let lat=parseFloat(geoData[0].lat)
+let lon=parseFloat(geoData[0].lon)
+
+map.flyTo([lat,lon],10,{duration:1.5})
+
+if(marker) map.removeLayer(marker)
+
+marker = L.marker([lat,lon],{draggable:true}).addTo(map)
+
+}
+
+}catch(e){}
 let pitch=parseFloat(document.getElementById("pitch").value)
 let height=parseFloat(document.getElementById("height").value)
 let terrain=document.getElementById("terrain").value
@@ -348,7 +479,87 @@ status.innerHTML="Server Fehler"
 }
 
 }
+let map = L.map('map').setView([51.1657,10.4515],6)
 
+L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',{
+attribution:'©OpenStreetMap ©Carto',
+maxZoom:19
+}).addTo(map)
+
+let marker = null
+
+const addrInput = document.getElementById("address")
+const resultsBox = document.getElementById("searchResults")
+
+function resizeDropdown(){
+let leftCol = document.querySelector(".left-col")
+resultsBox.style.width = leftCol.offsetWidth + "px"
+}
+
+window.addEventListener("resize", resizeDropdown)
+resizeDropdown()
+
+addrInput.addEventListener("input", async function(){
+
+let q = addrInput.value.trim()
+
+if(q.length < 3){
+resultsBox.innerHTML=""
+return
+}
+
+let url = `https://photon.komoot.io/api/?q=${encodeURIComponent(q)}&limit=5`
+
+let res = await fetch(url)
+let json = await res.json()
+
+resultsBox.innerHTML=""
+
+json.features.forEach(f=>{
+
+let street =
+f.properties.street ||
+f.properties.name ||
+""
+let number = f.properties.housenumber || ""
+let postcode = f.properties.postcode || ""
+let city = f.properties.city || f.properties.state || ""
+
+let lat = f.geometry.coordinates[1]
+let lon = f.geometry.coordinates[0]
+
+let div = document.createElement("div")
+div.className="searchItem"
+
+div.innerHTML = `
+<div class="searchStreet">
+${street} ${number}
+</div>
+<div class="searchCity">
+${postcode} ${city}
+</div>
+`
+
+div.onclick = function(){
+
+addrInput.value =
+(street ? street : "") +
+(number ? " " + number : "") +
+(postcode ? ", " + postcode : "") +
+(city ? " " + city : "")
+resultsBox.innerHTML=""
+
+map.flyTo([lat,lon],10,{duration:1.5})
+
+if(marker) map.removeLayer(marker)
+marker = L.marker([lat,lon],{draggable:true}).addTo(map)
+
+}
+
+resultsBox.appendChild(div)
+
+})
+})
 </script>
 <div style="margin-top:40px;font-size:12px;color:#9ca3af">
 Svea Solar Deutschland GmbH - Jacek Kotarak
