@@ -521,7 +521,16 @@ resultsBox.style.width = leftCol.offsetWidth + "px"
 window.addEventListener("resize", resizeDropdown)
 resizeDropdown()
 
-addrInput.addEventListener("input", async function(){
+let typingTimer
+let delay = 300
+
+addrInput.addEventListener("input", function(){
+
+clearTimeout(typingTimer)
+
+typingTimer = setTimeout(searchAddress, delay)
+
+})
 
 let q = addrInput.value.trim()
 
