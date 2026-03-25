@@ -532,6 +532,8 @@ typingTimer = setTimeout(searchAddress, delay)
 
 })
 
+async function searchAddress(){
+
 let q = addrInput.value.trim()
 
 if(q.length < 3){
@@ -554,6 +556,7 @@ let street =
 f.properties.street ||
 f.properties.name ||
 ""
+
 let number = f.properties.housenumber || ""
 let postcode = f.properties.postcode || ""
 let city = f.properties.city || f.properties.state || ""
@@ -580,6 +583,7 @@ addrInput.value =
 (number ? " " + number : "") +
 (postcode ? ", " + postcode : "") +
 (city ? " " + city : "")
+
 resultsBox.innerHTML=""
 
 map.flyTo([lat,lon],10,{duration:1.5})
@@ -592,6 +596,8 @@ marker = L.marker([lat,lon],{draggable:true}).addTo(map)
 resultsBox.appendChild(div)
 
 })
+
+}
 })
 </script>
 <div style="margin-top:40px;font-size:12px;color:#9ca3af">
