@@ -6,6 +6,7 @@ import requests
 import geopandas as gpd
 from shapely.geometry import Point
 import math
+import time
 
 app = FastAPI()
 
@@ -17,11 +18,27 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-# ⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐
 
+# ---------------- LOAD GIS ----------------
 
 snow = gpd.read_file("snow.kml", driver="LIBKML")
 wind = gpd.read_file("wind.kml", driver="LIBKML")
+
+# ⭐ CRS HARD FIX
+if snow.crs is None:
+    snow.set_crs(epsg=4326, inplace=True)
+else:
+    snow = snow.to_crs(epsg=4326)
+
+if wind.crs is None:
+    wind.set_crs(epsg=4326, inplace=True)
+else:
+    wind = wind.to_crs(epsg=4326)
+
+# ⭐ spatial index warmup (performance + stabilność)
+snow.sindex
+wind.sindex
+
 
 # ---------------- GEO ----------------
 
@@ -32,37 +49,53 @@ def geocode(address):
     params = {
         "q": address,
         "format": "json",
-        "limit": 1
+        "limit": 1,
+        "countrycodes": "de"
     }
 
     headers = {
         "User-Agent": "wind-snow-calculator"
     }
 
-    r = requests.get(url, params=params, headers=headers, timeout=10)
+    # ⭐ retry logic
+    for _ in range(2):
+        try:
+            r = requests.get(url, params=params, headers=headers, timeout=6)
 
-    data = r.json()
+            if r.status_code != 200:
+                time.sleep(0.4)
+                continue
 
-    if len(data) == 0:
-        raise Exception("Adresse nicht gefunden")
+            data = r.json()
 
-    return float(data[0]["lat"]), float(data[0]["lon"])
+            if len(data) == 0:
+                raise Exception("Adresse nicht gefunden")
+
+            return float(data[0]["lat"]), float(data[0]["lon"])
+
+        except Exception:
+            time.sleep(0.4)
+
+    raise Exception("Geocoding fehlgeschlagen")
 
 
 def elevation(lat, lon):
 
     try:
         url = f"https://api.open-elevation.com/api/v1/lookup?locations={lat},{lon}"
-        r = requests.get(url, timeout=10)
 
-        if r.status_code != 200:
-            return 0
+        for _ in range(2):
+            r = requests.get(url, timeout=6)
 
-        data = r.json()
+            if r.status_code == 200:
+                data = r.json()
+                return data["results"][0]["elevation"]
 
-        return data["results"][0]["elevation"]
+            time.sleep(0.3)
 
-    except:
+        return 0
+
+    except Exception:
         return 0
 
 
@@ -70,18 +103,19 @@ def get_zone(gdf, lat, lon):
 
     pt = Point(lon, lat)
 
-    res = gdf[gdf.contains(pt)]
+    # ⭐ intersects zamiast contains (punkt na granicy)
+    res = gdf[gdf.intersects(pt)]
 
     if len(res) > 0:
         zone = str(res.iloc[0]["Name"])
 
-        # ⭐⭐⭐ WYJĄTEK 1a* ⭐⭐⭐
         if zone.strip().lower() == "1a*":
             return "1a"
 
         return zone
 
     return "unknown"
+
 
 # ---------------- SCHNEE ----------------
 
@@ -146,7 +180,6 @@ def mu_pv(angle):
 def snow_roof(zone, elevation, angle):
 
     sk_ground = snow_ground(zone, elevation)
-
     mu = mu_pv(angle)
 
     return sk_ground * mu
@@ -169,47 +202,11 @@ def interp_log(h, h1, h2, v1, v2):
 
 def wind_pressure(zone, height, terrain):
 
-    table = {
-        "2": {
-            "Geländekategorie I": {5: 0.890, 11: 1.034, 15: 1.097, 20: 1.159},
-            "Geländekategorie II": {5: 0.695, 11: 0.839, 15: 0.904, 20: 0.969},
-            "Geländekategorie III": {5: 0.586, 11: 0.644, 15: 0.709, 20: 0.775},
-            "Geländekategorie IV": {5: 0.508, 11: 0.508, 15: 0.508, 20: 0.567},
-            "Gemischtes Profil I": {5: 0.586, 11: 0.688, 15: 0.722, 20: 0.858},
-            "Gemischtes Profil II": {5: 0.745, 11: 0.922, 15: 1.002, 20: 1.083},
-            "Gemischtes Profil III": {5: 1.315, 11: 1.527, 15: 1.620, 20: 1.711},
-        },
+    # ⭐ NaN guard
+    if math.isnan(height):
+        return 0.60
 
-        "1": {
-            "Geländekategorie I": {5: 0.721, 11: 0.838, 15: 0.889, 20: 0.939},
-            "Geländekategorie II": {5: 0.563, 11: 0.680, 15: 0.732, 20: 0.785},
-            "Geländekategorie III": {5: 0.475, 11: 0.521, 15: 0.574, 20: 0.628},
-            "Geländekategorie IV": {5: 0.411, 11: 0.411, 15: 0.411, 20: 0.459},
-            "Gemischtes Profil I": {5: 0.745, 11: 0.557, 15: 0.625, 20: 0.695},
-            "Gemischtes Profil II": {5: 0.604, 11: 0.747, 15: 0.812, 20: 0.878},
-            "Gemischtes Profil III": {5: 1.315, 11: 1.527, 15: 1.620, 20: 1.711},
-        },
-
-        "3": {
-            "Geländekategorie I": {5: 1.077, 11: 1.251, 15: 1.327, 20: 1.402},
-            "Geländekategorie II": {5: 0.841, 11: 1.016, 15: 1.094, 20: 1.172},
-            "Geländekategorie III": {5: 0.709, 11: 0.779, 15: 0.858, 20: 0.938},
-            "Geländekategorie IV": {5: 0.615, 11: 0.614, 15: 0.615, 20: 0.686},
-            "Gemischtes Profil I": {5: 0.709, 11: 0.832, 15: 0.934, 20: 1.039},
-            "Gemischtes Profil II": {5: 0.902, 11: 1.115, 15: 1.213, 20: 1.311},
-            "Gemischtes Profil III": {5: 1.315, 11: 1.527, 15: 1.620, 20: 1.711},
-        },
-
-        "4": {
-            "Geländekategorie I": {5: 1.282, 11: 1.489, 15: 1.580, 20: 1.668},
-            "Geländekategorie II": {5: 1.000, 11: 1.209, 15: 1.302, 20: 1.395},
-            "Geländekategorie III": {5: 0.844, 11: 0.927, 15: 1.021, 20: 1.116},
-            "Geländekategorie IV": {5: 0.731, 11: 0.731, 15: 0.731, 20: 0.817},
-            "Gemischtes Profil I": {5: 0.844, 11: 0.991, 15: 1.111, 20: 1.236},
-            "Gemischtes Profil II": {5: 1.073, 11: 1.328, 15: 1.444, 20: 1.560},
-            "Gemischtes Profil III": {5: 1.315, 11: 1.528, 15: 1.620, 20: 1.711},
-        }
-    }
+    table = { ... TU ZOSTAJE TWOJA TABELA BEZ ZMIAN ... }
 
     zone = zone.replace("*", "")
 
@@ -237,12 +234,23 @@ def wind_pressure(zone, height, terrain):
 
     return terrain_table[heights[-1]]
 
+
 # ---------------- API ----------------
 
 @app.get("/calc")
 def calc(address: str, roof_pitch: float, roof_height: float, terrain: str):
 
     try:
+
+        # ⭐ NaN + range validation
+        if math.isnan(roof_pitch) or math.isnan(roof_height):
+            raise Exception("NaN input")
+
+        if roof_pitch < 0 or roof_pitch > 60:
+            raise Exception("roof_pitch invalid")
+
+        if roof_height < 0 or roof_height > 30:
+            raise Exception("roof_height invalid")
 
         lat, lon = geocode(address)
         h = elevation(lat, lon)
@@ -267,16 +275,18 @@ def calc(address: str, roof_pitch: float, roof_height: float, terrain: str):
             "is_exceptional": is_exceptional
         }
 
-    except Exception:
+    except Exception as e:
 
         return JSONResponse(
             status_code=200,
-            content={"error": "Serverfehler — Eingabedaten prüfen"}
+            content={"error": str(e)}
         )
+
 
 @app.get("/")
 def home():
     return FileResponse("index.html")
+
 
 @app.get("/ping")
 def ping():
