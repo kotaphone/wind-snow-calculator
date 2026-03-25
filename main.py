@@ -277,3 +277,7 @@ def calc(address: str, roof_pitch: float, roof_height: float, terrain: str):
 @app.get("/")
 def home():
     return FileResponse("index.html")
+
+@app.get("/ping")
+def ping():
+    return {"status": "ok"}
