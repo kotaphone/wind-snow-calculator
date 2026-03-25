@@ -286,7 +286,7 @@ document.getElementById("wind").innerHTML=j.wind_pressure.toFixed(2)+" kN/m²"
 document.getElementById("snow").innerHTML=j.snow_regular.toFixed(2)+" kN/m²"
 let flat = j.snow_zone.includes("*")
 
-document.getElementById("flat").innerHTML = flat ? "✔" : "-"
+document.getElementById("flat").innerHTML = flat ? "✔" : "<span class='minus'>-</span>"
 
 if(flat){
 document.getElementById("snowEx").innerHTML =
