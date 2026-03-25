@@ -521,18 +521,7 @@ resultsBox.style.width = leftCol.offsetWidth + "px"
 window.addEventListener("resize", resizeDropdown)
 resizeDropdown()
 
-let typingTimer
-let delay = 300
-
-addrInput.addEventListener("input", function(){
-
-clearTimeout(typingTimer)
-
-typingTimer = setTimeout(searchAddress, delay)
-
-})
-
-async function searchAddress(){
+addrInput.addEventListener("input", async function(){
 
 let q = addrInput.value.trim()
 
@@ -548,15 +537,12 @@ let json = await res.json()
 
 resultsBox.innerHTML=""
 
-json.features
-.filter(f => f.properties.countrycode === "DE")
-.forEach(f=>{
+json.features.forEach(f=>{
 
 let street =
 f.properties.street ||
 f.properties.name ||
 ""
-
 let number = f.properties.housenumber || ""
 let postcode = f.properties.postcode || ""
 let city = f.properties.city || f.properties.state || ""
@@ -583,7 +569,6 @@ addrInput.value =
 (number ? " " + number : "") +
 (postcode ? ", " + postcode : "") +
 (city ? " " + city : "")
-
 resultsBox.innerHTML=""
 
 map.flyTo([lat,lon],10,{duration:1.5})
@@ -596,8 +581,6 @@ marker = L.marker([lat,lon],{draggable:true}).addTo(map)
 resultsBox.appendChild(div)
 
 })
-
-}
 })
 </script>
 <div style="margin-top:40px;font-size:12px;color:#9ca3af">
