@@ -15,14 +15,14 @@ margin:0;
 }
 
 .hero{
-height:420px;
+height:460px;
 background:url("https://cms.prod.photon.sveasolar.com/api/headless/images?id=1060&w=2000&q=80") center/cover;
 display:flex;
 align-items:center;
 justify-content:center;
 position:relative;
+padding-top:110px;
 }
-
 .hero::after{
 content:"";
 position:absolute;
@@ -32,9 +32,16 @@ background:linear-gradient(90deg,rgba(0,0,0,0.65),rgba(0,0,0,0.15));
 
 .hero-inner{
 position:relative;
-z-index:2;
+z-index:8;
 color:white;
 width:1000px;
+margin:0 auto;
+padding-top:0px;
+}
+
+.hero{
+display:block;
+padding-top:120px;
 }
 
 .hero h1{
@@ -45,7 +52,7 @@ margin:0;
 
 .panel{
 width:1000px;
-margin:-80px auto 60px auto;
+margin:-380px auto 60px auto;
 background:white;
 border-radius:24px;
 box-shadow:0 30px 60px rgba(0,0,0,0.12);
@@ -242,6 +249,21 @@ width:100% !important;
 left:0 !important;
 }
 
+}
+
+@media (max-width:900px){
+
+.panel{
+width:92%;
+margin:-80px auto 40px auto;
+padding:20px;
+}
+
+}
+
+.panel{
+backdrop-filter: blur(6px);
+background:rgba(255,255,255,0.92);
 }
 
 </style>
