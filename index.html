@@ -141,6 +141,11 @@ td{
 padding:10px;
 border-bottom:1px solid #e5e7eb;
 }
+
+.minus{
+color:#9ca3af;
+font-weight:600;
+}
 </style>
 </head>
 
@@ -279,10 +284,17 @@ document.getElementById("elevation").innerHTML=j.elevation+" m"
 
 document.getElementById("wind").innerHTML=j.wind_pressure.toFixed(2)+" kN/m²"
 document.getElementById("snow").innerHTML=j.snow_regular.toFixed(2)+" kN/m²"
-document.getElementById("snowEx").innerHTML=j.snow_exceptional.toFixed(2)+" kN/m²"
+let flat = j.snow_zone.includes("*")
 
-let flat=j.snow_zone.includes("*")
 document.getElementById("flat").innerHTML = flat ? "✔" : "-"
+
+if(flat){
+document.getElementById("snowEx").innerHTML =
+j.snow_exceptional.toFixed(2)+" kN/m²"
+}else{
+document.getElementById("snowEx").innerHTML =
+"<span class='minus'>-</span>"
+}
 
 /* ===== NOWE HINWEISE SL-RACK ===== */
 
@@ -338,7 +350,8 @@ status.innerHTML="Server Fehler"
 }
 
 </script>
-
-</body>
+<div style="margin-top:40px;font-size:12px;color:#9ca3af">
 Svea Solar Deutschland GmbH - Jacek Kotarak
+</div>
+</body>
 </html>
