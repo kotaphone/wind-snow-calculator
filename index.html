@@ -537,7 +537,9 @@ let json = await res.json()
 
 resultsBox.innerHTML=""
 
-json.features.forEach(f=>{
+json.features
+.filter(f => f.properties.countrycode === "DE")
+.forEach(f=>{
 
 let street =
 f.properties.street ||
