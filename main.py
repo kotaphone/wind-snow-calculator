@@ -291,3 +291,102 @@ def home():
 @app.get("/ping")
 def ping():
     return {"status": "ok"}
+
+
+from fastapi import Request
+import json
+
+@app.post("/scaffold-calc")
+async def scaffold_calc(req: Request):
+    try:
+        data = await req.json()
+
+        # ===== WALIDACJA =====
+        required_fields = ["height", "roof_pitch", "roof_type"]
+
+        for f in required_fields:
+            if f not in data or data[f] is None:
+                return {"error": f"Brak pola: {f}"}
+
+        height = float(data["height"])
+        roof_pitch = float(data["roof_pitch"])
+        roof_type = data["roof_type"]
+
+        if height <= 0 or roof_pitch < 0:
+            return {"error": "Nieprawidłowe wartości liczbowe"}
+
+        # ===== POWIERZCHNIA =====
+        area = data.get("area")
+
+        if not area:
+            length = float(data.get("length", 0))
+            width = float(data.get("width", 0))
+
+            if length <= 0 or width <= 0:
+                return {"error": "Podaj długość i szerokość lub powierzchnię"}
+
+            area = length * width
+
+        # ===== WCZYTANIE CEN =====
+        with open("geruestpreise.txt") as f:
+            prices = json.load(f)
+
+        price_per_m2 = prices["grundpreise"]["pro_m2"]
+        base_price = prices["grundpreise"]["grundpauschale"]
+
+        # ===== PODSTAWA =====
+        base_cost = area * price_per_m2 + base_price
+
+        security_cost = 0
+        breakdown = []
+
+        # ===== LOGIKA DACHÓW =====
+
+        if roof_type == "flat":
+            attika = float(data.get("attika", 0))
+
+            if attika <= 0:
+                return {"error": "Podaj wysokość attyki"}
+
+            if attika < 0.7:
+                sec_price = prices["sicherungen"]["attika_unter_0_7"]["preis_pro_m2"]
+                security_cost = area * sec_price
+                breakdown.append({
+                    "name": "Sicherung Attika",
+                    "value": security_cost
+                })
+
+        elif roof_type == "gable":
+            ridge = float(data.get("ridge", 0))
+            side_sec = data.get("sideSec")
+
+            if ridge <= 0 or not side_sec:
+                return {"error": "Brak Firsthöhe lub wyboru zabezpieczenia"}
+
+            if side_sec == "yes":
+                width = float(data.get("width", 0))
+                sec_price = prices["sicherungen"]["seitensicherung_satteldach"]["preis_pro_m2"]
+
+                security_cost = width * ridge * 2 * sec_price
+
+                breakdown.append({
+                    "name": "Seitensicherung",
+                    "value": security_cost
+                })
+
+        # ===== SUMA =====
+        total = base_cost + security_cost
+
+        if data.get("tax") == "gross":
+            total *= (1 + prices["mwst"]["satz"])
+
+        return {
+            "area": area,
+            "base_cost": base_cost,
+            "security_cost": security_cost,
+            "total": total,
+            "breakdown": breakdown
+        }
+
+    except Exception as e:
+        return {"error": str(e)}
