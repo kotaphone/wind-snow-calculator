@@ -188,16 +188,35 @@ async function calcScaffold(){
 let result = document.getElementById("result")
 result.innerHTML = ""
 
+let height = parseFloat(g_height.value)
+let pitch = parseFloat(g_pitch.value)
+let length = parseFloat(g_length.value)
+let width = parseFloat(g_width.value)
+let area = parseFloat(g_area.value)
+
+if(!height || !pitch){
+result.innerHTML = "<div class='error'>Podaj wysokość i nachylenie dachu</div>"
+return
+}
+
+if(!area){
+if(!length || !width){
+result.innerHTML = "<div class='error'>Podaj długość i szerokość lub powierzchnię</div>"
+return
+}
+area = length * width
+}
+
 let data = {
-height: parseFloat(g_height.value),
-length: parseFloat(g_length.value),
-width: parseFloat(g_width.value),
-area: parseFloat(g_area.value),
-roof_pitch: parseFloat(g_pitch.value),
+height: height,
+length: length,
+width: width,
+area: area,
+roof_pitch: pitch,
 roof_type: g_roofType.value,
-attika: g_attika ? parseFloat(g_attika.value) : null,
-ridge: g_ridge ? parseFloat(g_ridge.value) : null,
-sideSec: g_sideSec ? g_sideSec.value : null,
+attika: (typeof g_attika !== "undefined" && g_attika) ? parseFloat(g_attika.value) : null,
+ridge: (typeof g_ridge !== "undefined" && g_ridge) ? parseFloat(g_ridge.value) : null,
+sideSec: (typeof g_sideSec !== "undefined" && g_sideSec) ? g_sideSec.value : null,
 tax: g_tax.value
 }
 
@@ -218,11 +237,19 @@ return
 
 result.innerHTML = `
 <div class="card">
-<div><b>Fläche:</b> ${j.area.toFixed(2)} m²</div>
+<div><b>Gerüstfläche:</b> ${j.area.toFixed(2)} m²</div>
 <div><b>Grundpreis:</b> ${j.base_cost.toFixed(2)} €</div>
-<div><b>Sicherung:</b> ${j.security_cost.toFixed(2)} €</div>
+<div><b>Sicherungen:</b> ${j.security_cost.toFixed(2)} €</div>
+
 <hr>
-<div><b>Gesamt:</b> ${j.total.toFixed(2)} €</div>
+
+<div><b>Zwischensumme:</b> ${(j.base_cost + j.security_cost).toFixed(2)} €</div>
+
+<hr>
+
+<div style="font-size:22px;font-weight:700;color:#16a34a">
+GESAMT: ${j.total.toFixed(2)} €
+</div>
 </div>
 `
 
