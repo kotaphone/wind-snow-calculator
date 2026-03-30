@@ -294,78 +294,108 @@ async def scaffold_calc(req: Request):
     try:
         data = await req.json()
 
-        required_fields = ["height", "roof_pitch", "roof_type"]
+        # ===== VALIDIERUNG =====
+        def require(field, name):
+            if field not in data or data[field] is None:
+                raise Exception(f"Feld fehlt: {name}")
 
-        for f in required_fields:
-            if f not in data or data[f] is None:
-                return {"error": f"Brak pola: {f}"}
+        require("height", "Gerüsthöhe")
+        require("roof_pitch", "Dachneigung")
+        require("roof_type", "Dachform")
 
         height = float(data["height"])
-        roof_pitch = float(data["roof_pitch"])
+        pitch = float(data["roof_pitch"])
         roof_type = data["roof_type"]
 
-        if height <= 0 or roof_pitch < 0:
-            return {"error": "Nieprawidłowe wartości liczbowe"}
+        if height <= 0:
+            raise Exception("Gerüsthöhe muss größer als 0 sein")
 
+        if pitch < 0:
+            raise Exception("Dachneigung ungültig")
+
+        # ===== FLÄCHE =====
         area = data.get("area")
 
-        # ✅ FIX
-        if area is None:
+        if not area:
             length = float(data.get("length", 0))
             width = float(data.get("width", 0))
 
             if length <= 0 or width <= 0:
-                return {"error": "Podaj długość i szerokość lub powierzchnię"}
+                raise Exception("Bitte Länge und Breite oder Fläche angeben")
 
             area = length * width
 
-        with open(os.path.join(BASE_DIR, "geruestpreise.txt")) as f:
+        # ===== PREISE =====
+        with open("geruestpreise.txt") as f:
             prices = json.load(f)
 
-        price_per_m2 = prices["grundpreise"]["pro_m2"]
+        price_m2 = prices["grundpreise"]["pro_m2"]
         base_price = prices["grundpreise"]["grundpauschale"]
 
-        base_cost = area * price_per_m2 + base_price
+        base_cost = area * price_m2 + base_price
 
         security_cost = 0
         breakdown = []
 
+        # ===== FLACHDACH =====
         if roof_type == "flat":
+            attika = float(data.get("attika", 0))
 
-            attika = data.get("attika")
-
-            if attika is None:
-                return {"error": "Podaj wysokość attyki"}
-
-            attika = float(attika)
+            if attika <= 0:
+                raise Exception("Attikahöhe fehlt")
 
             if attika < 0.7:
                 sec_price = prices["sicherungen"]["attika_unter_0_7"]["preis_pro_m2"]
                 security_cost = area * sec_price
 
-        elif roof_type == "gable":
+                breakdown.append({
+                    "name": "Sicherung Attika (< 0,7 m)",
+                    "value": security_cost
+                })
 
+        # ===== SATTELDACH =====
+        elif roof_type == "gable":
             ridge = float(data.get("ridge", 0))
             side_sec = data.get("sideSec")
 
-            if ridge <= 0 or not side_sec:
-                return {"error": "Brak Firsthöhe lub wyboru zabezpieczenia"}
+            if ridge <= 0:
+                raise Exception("Firsthöhe fehlt")
+
+            if not side_sec:
+                raise Exception("Seitensicherung auswählen")
 
             if side_sec == "yes":
                 width = float(data.get("width", 0))
+
+                if width <= 0:
+                    raise Exception("Gebäudebreite fehlt")
+
                 sec_price = prices["sicherungen"]["seitensicherung_satteldach"]["preis_pro_m2"]
+
                 security_cost = width * ridge * 2 * sec_price
 
+                breakdown.append({
+                    "name": "Seitensicherung",
+                    "value": security_cost
+                })
+
+        # ===== SUMME =====
         total = base_cost + security_cost
 
         if data.get("tax") == "gross":
             total *= (1 + prices["mwst"]["satz"])
 
+        breakdown.insert(0, {
+            "name": "Grundpreis Gerüst",
+            "value": base_cost
+        })
+
         return {
             "area": area,
             "base_cost": base_cost,
             "security_cost": security_cost,
-            "total": total
+            "total": total,
+            "breakdown": breakdown
         }
 
     except Exception as e:
