@@ -280,7 +280,10 @@ def home():
 @app.get("/ping")
 def ping():
     return {"status": "ok"}
-
+    
+@app.get("/index2")
+def index2():
+    return FileResponse("index2.html")
 
 # ---------------- GERÜST ----------------
 
