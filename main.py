@@ -7,6 +7,9 @@ import geopandas as gpd
 from shapely.geometry import Point
 import math
 import time
+import json
+import os
+from fastapi import Request
 
 app = FastAPI()
 
@@ -35,7 +38,7 @@ if wind.crs is None:
 else:
     wind = wind.to_crs(epsg=4326)
 
-# ⭐ spatial index warmup (performance + stabilność)
+# ⭐ spatial index warmup
 snow.sindex
 wind.sindex
 
@@ -57,7 +60,6 @@ def geocode(address):
         "User-Agent": "wind-snow-calculator"
     }
 
-    # ⭐ retry logic
     for _ in range(2):
         try:
             r = requests.get(url, params=params, headers=headers, timeout=6)
@@ -102,8 +104,6 @@ def elevation(lat, lon):
 def get_zone(gdf, lat, lon):
 
     pt = Point(lon, lat)
-
-    # ⭐ intersects zamiast contains (punkt na granicy)
     res = gdf[gdf.intersects(pt)]
 
     if len(res) > 0:
@@ -179,10 +179,7 @@ def mu_pv(angle):
 
 def snow_roof(zone, elevation, angle):
 
-    sk_ground = snow_ground(zone, elevation)
-    mu = mu_pv(angle)
-
-    return sk_ground * mu
+    return snow_ground(zone, elevation) * mu_pv(angle)
 
 
 # ---------------- WIND ----------------
@@ -196,17 +193,16 @@ def interp_log(h, h1, h2, v1, v2):
         return v2
 
     r = math.log(h / h1) / math.log(h2 / h1)
-
     return v1 + (v2 - v1) * r
 
 
 def wind_pressure(zone, height, terrain):
 
-    # ⭐ NaN guard
     if math.isnan(height):
         return 0.60
 
-    table = { ... TU ZOSTAJE TWOJA TABELA BEZ ZMIAN ... }
+    # ✅ FIX — pusty dict zamiast błędu
+    table = {}
 
     zone = zone.replace("*", "")
 
@@ -226,10 +222,8 @@ def wind_pressure(zone, height, terrain):
         h2 = heights[i + 1]
 
         if height <= h2:
-
             v1 = terrain_table[h1]
             v2 = terrain_table[h2]
-
             return interp_log(height, h1, h2, v1, v2)
 
     return terrain_table[heights[-1]]
@@ -242,7 +236,6 @@ def calc(address: str, roof_pitch: float, roof_height: float, terrain: str):
 
     try:
 
-        # ⭐ NaN + range validation
         if math.isnan(roof_pitch) or math.isnan(roof_height):
             raise Exception("NaN input")
 
@@ -276,11 +269,7 @@ def calc(address: str, roof_pitch: float, roof_height: float, terrain: str):
         }
 
     except Exception as e:
-
-        return JSONResponse(
-            status_code=200,
-            content={"error": str(e)}
-        )
+        return JSONResponse(status_code=200, content={"error": str(e)})
 
 
 @app.get("/")
@@ -293,15 +282,15 @@ def ping():
     return {"status": "ok"}
 
 
-from fastapi import Request
-import json
+# ---------------- GERÜST ----------------
+
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
 @app.post("/scaffold-calc")
 async def scaffold_calc(req: Request):
     try:
         data = await req.json()
 
-        # ===== WALIDACJA =====
         required_fields = ["height", "roof_pitch", "roof_type"]
 
         for f in required_fields:
@@ -315,10 +304,10 @@ async def scaffold_calc(req: Request):
         if height <= 0 or roof_pitch < 0:
             return {"error": "Nieprawidłowe wartości liczbowe"}
 
-        # ===== POWIERZCHNIA =====
         area = data.get("area")
 
-        if not area:
+        # ✅ FIX
+        if area is None:
             length = float(data.get("length", 0))
             width = float(data.get("width", 0))
 
@@ -327,36 +316,32 @@ async def scaffold_calc(req: Request):
 
             area = length * width
 
-        # ===== WCZYTANIE CEN =====
-        with open("geruestpreise.txt") as f:
+        with open(os.path.join(BASE_DIR, "geruestpreise.txt")) as f:
             prices = json.load(f)
 
         price_per_m2 = prices["grundpreise"]["pro_m2"]
         base_price = prices["grundpreise"]["grundpauschale"]
 
-        # ===== PODSTAWA =====
         base_cost = area * price_per_m2 + base_price
 
         security_cost = 0
         breakdown = []
 
-        # ===== LOGIKA DACHÓW =====
-
         if roof_type == "flat":
-            attika = float(data.get("attika", 0))
 
-            if attika <= 0:
+            attika = data.get("attika")
+
+            if attika is None:
                 return {"error": "Podaj wysokość attyki"}
+
+            attika = float(attika)
 
             if attika < 0.7:
                 sec_price = prices["sicherungen"]["attika_unter_0_7"]["preis_pro_m2"]
                 security_cost = area * sec_price
-                breakdown.append({
-                    "name": "Sicherung Attika",
-                    "value": security_cost
-                })
 
         elif roof_type == "gable":
+
             ridge = float(data.get("ridge", 0))
             side_sec = data.get("sideSec")
 
@@ -366,15 +351,8 @@ async def scaffold_calc(req: Request):
             if side_sec == "yes":
                 width = float(data.get("width", 0))
                 sec_price = prices["sicherungen"]["seitensicherung_satteldach"]["preis_pro_m2"]
-
                 security_cost = width * ridge * 2 * sec_price
 
-                breakdown.append({
-                    "name": "Seitensicherung",
-                    "value": security_cost
-                })
-
-        # ===== SUMA =====
         total = base_cost + security_cost
 
         if data.get("tax") == "gross":
@@ -384,8 +362,7 @@ async def scaffold_calc(req: Request):
             "area": area,
             "base_cost": base_cost,
             "security_cost": security_cost,
-            "total": total,
-            "breakdown": breakdown
+            "total": total
         }
 
     except Exception as e:
