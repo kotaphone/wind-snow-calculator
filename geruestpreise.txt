@@ -1,0 +1,17 @@
+{
+  "grundpreise": {
+    "pro_m2": 12.5,
+    "grundpauschale": 150
+  },
+  "sicherungen": {
+    "attika_unter_0_7": {
+      "preis_pro_m2": 2.0
+    },
+    "seitensicherung_satteldach": {
+      "preis_pro_m2": 3.5
+    }
+  },
+  "mwst": {
+    "satz": 0.19
+  }
+}
