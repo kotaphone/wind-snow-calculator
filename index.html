@@ -3,7 +3,7 @@
 <head>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta charset="UTF-8">
-<title>Wind & Schneelast Rechner</title>
+<title>Gerüst & Flächenlast Rechner</title>
 
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
 
@@ -21,7 +21,7 @@ display:flex;
 align-items:center;
 justify-content:center;
 position:relative;
-padding-top:110px;
+padding-top:120px;
 }
 .hero::after{
 content:"";
@@ -36,17 +36,10 @@ z-index:8;
 color:white;
 width:1000px;
 margin:0 auto;
-padding-top:0px;
-}
-
-.hero{
-display:block;
-padding-top:120px;
 }
 
 .hero h1{
 font-size:48px;
-font-weight:600;
 margin:0;
 }
 
@@ -57,8 +50,6 @@ background:white;
 border-radius:24px;
 box-shadow:0 30px 60px rgba(0,0,0,0.12);
 padding:40px;
-position:relative;
-z-index:3;
 }
 
 .row{
@@ -72,519 +63,172 @@ flex:1;
 padding:14px;
 border-radius:12px;
 border:1px solid #e5e7eb;
-font-size:15px;
 }
 
 .btn{
-padding:14px 26px;
+padding:14px;
 border-radius:999px;
-font-size:16px;
-cursor:pointer;
-border:none;
 background:linear-gradient(110deg,#ff4b2b,#d600c8);
 color:white;
-box-shadow:0 10px 25px rgba(214,0,200,0.3);
-}
-
-.status{
-margin-top:20px;
-padding:14px;
-border-radius:12px;
-font-weight:600;
-}
-
-.loading{ background:#fff3cd }
-.ok{ background:#d1fae5 }
-.error{ background:#fee2e2 }
-
-.results{
-margin-top:30px;
-display:none;
-}
-
-.result-grid{
-display:grid;
-grid-template-columns:1fr 1fr;
-gap:24px;
+border:none;
+cursor:pointer;
 }
 
 .card{
 background:#f9fafb;
-padding:22px;
-border-radius:16px;
-}
-
-.card div{
-margin-bottom:8px;
-font-size:17px;
-}
-
-.hinweis{
-margin-top:25px;
-background:#fff3cd;
-border:2px solid #facc15;
-padding:16px;
-border-radius:12px;
-font-weight:700;
-color:#b91c1c;
-text-align:center;
-display:none;
-font-size:18px;
-}
-
-.desc{
-margin-top:40px;
-background:#f3f4f6;
-padding:25px;
-border-radius:16px;
-font-size:14px;
-}
-
-table{
-width:100%;
-border-collapse:collapse;
-}
-
-td{
-padding:10px;
-border-bottom:1px solid #e5e7eb;
-}
-
-.minus{
-color:#9ca3af;
-font-weight:600;
-}
-
-.two-col{
-display:flex;
-gap:30px;
-align-items:flex-start;
-}
-
-.left-col{
-flex:1;
-display:flex;
-flex-direction:column;
-gap:18px;
-}
-
-.right-col{
-flex:1;
-}
-
-#map{
-height:420px;
-width:100%;
-}
-
-#searchResults{
-position:absolute;
-top:58px;
-left:0;
-width:470px;
-background:#f3f4f6;
-border-radius:16px;
-box-shadow:0 20px 40px rgba(0,0,0,0.15);
-overflow:hidden;
-z-index:999;
-}
-
-.searchItem{
-padding:14px 18px;
-cursor:pointer;
-border-bottom:1px solid #e5e7eb;
-background:#f9fafb;
-transition:0.15s;
-}
-
-.searchItem:hover{
-background:white;
-}
-
-.searchStreet{
-font-weight:600;
-font-size:15px;
-}
-
-.searchCity{
-font-size:12px;
-color:#6b7280;
-margin-top:2px;
-}
-
-.panel{
-overflow:visible;
-}
-
-.row{
-position:relative;
-}
-
-@media (max-width: 900px){
-
-.panel{
-width:92%;
-padding:24px;
-margin:-60px auto 40px auto;
-}
-
-.hero-inner{
-width:92%;
-}
-
-.hero h1{
-font-size:32px;
-}
-
-.two-col{
-flex-direction:column;
-}
-
-#map{
-height:320px;
-}
-
-#searchResults{
-width:100% !important;
-left:0 !important;
-}
-
-}
-
-@media (max-width:900px){
-
-.panel{
-width:92%;
-margin:-80px auto 40px auto;
 padding:20px;
+border-radius:16px;
+margin-top:20px;
 }
 
-}
-
-.panel{
-backdrop-filter: blur(6px);
-background:rgba(255,255,255,0.92);
-}
+.hidden{display:none}
+.error{color:red;font-weight:600}
 
 </style>
-
-<link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
-<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 </head>
 
 <body>
 
 <div class="hero">
 <div class="hero-inner">
-<h1>Wind- & Schneelast Rechner</h1>
+<h1>Kalkulator</h1>
 </div>
 </div>
 
 <div class="panel">
 
+<!-- TRYB -->
 <div class="row">
-<input id="address" placeholder="Adresse eingeben">
-<div id="searchResults"></div>
-</div>
-<div class="two-col">
-
-<div class="left-col">
-
-<select id="terrain">
-<option>Geländekategorie I</option>
-<option>Geländekategorie II</option>
-<option selected>Geländekategorie III</option>
-<option>Geländekategorie IV</option>
-<option>Gemischtes Profil I</option>
-<option>Gemischtes Profil II</option>
-<option>Gemischtes Profil III</option>
+<select id="mode" onchange="switchMode()">
+<option value="wind">Wind & Schnee</option>
+<option value="scaffold">Gerüst Kalkulator</option>
 </select>
+</div>
 
-<input id="pitch" type="number" placeholder="Dachneigung °">
-<input id="height" type="number" placeholder="Gebäudehöhe m">
+<!-- ================= WIND ================= -->
+<div id="windUI">
+
+<input id="address" placeholder="Adresse">
+<input id="pitch" type="number" placeholder="Dachneigung">
+<input id="height" type="number" placeholder="Gebäudehöhe">
 
 <button class="btn" onclick="calc()">Berechnen</button>
 
-<div id="status" class="status loading" style="display:none"></div>
+<div id="results"></div>
 
 </div>
 
-<div class="right-col">
-<div id="map" style="margin-top:0;border-radius:16px"></div>
-</div>
+<!-- ================= GERÜST ================= -->
+<div id="scaffoldUI" class="hidden">
 
-</div>
+<input id="g_height" type="number" placeholder="Gerüsthöhe (m)">
+<input id="g_length" type="number" placeholder="Länge (m)">
+<input id="g_width" type="number" placeholder="Breite (m)">
+<input id="g_area" type="number" placeholder="oder Fläche (m²)">
+<input id="g_pitch" type="number" placeholder="Dachneigung">
 
-<div id="results" class="results">
+<select id="g_roofType" onchange="updateRoofFields()">
+<option value="">Dachform</option>
+<option value="flat">Flachdach</option>
+<option value="gable">Satteldach</option>
+</select>
 
-<div class="result-grid">
+<div id="roofFields"></div>
 
-<div class="card">
-<div><b>Windzone:</b> <span id="windzone"></span></div>
-<div><b>Höhe ü.NN:</b> <span id="elevation"></span></div>
-<div><b>Schneelastzone:</b> <span id="snowzone"></span></div>
-<div><b>Norddeutsches Flachland:</b> <span id="flat"></span></div>
-</div>
+<select id="g_tax">
+<option value="net">Netto</option>
+<option value="gross">Brutto</option>
+</select>
 
-<div class="card">
-<div><b>Windlast:</b> <span id="wind"></span></div>
-<div><b>Normale Schneelast:</b> <span id="snow"></span></div>
-<div><b>Außergewöhnliche Schneelast:</b> <span id="snowEx"></span></div>
-</div>
+<button class="btn" onclick="calcScaffold()">Berechnen</button>
 
-</div>
+<div id="scaffoldResult"></div>
 
-</div>
-
-<div id="hinweis" class="hinweis"></div>
-
-<div class="desc">
-<b>Geländekategorien Erklärung</b>
-<table>
-<tr><td>Geländekategorie I</td><td>Offenes Meer, Seen mit mindestens 5 km offenem Gebiet in Windrichtung</td></tr>
-<tr><td>Geländekategorie II</td><td>Landwirtschaftliche Gebiete mit vereinzelten Hindernissen</td></tr>
-<tr><td>Geländekategorie III</td><td>Vorstadt- oder Gewerbegebiet</td></tr>
-<tr><td>Geländekategorie IV</td><td>Dicht bebaute Stadtgebiete</td></tr>
-<tr><td>Gemischtes Profil I</td><td>Binnenland Mischung Kat. II + III</td></tr>
-<tr><td>Gemischtes Profil II</td><td>Küstengebiet Ostsee</td></tr>
-<tr><td>Gemischtes Profil III</td><td>Inseln Nordsee</td></tr>
-</table>
 </div>
 
 </div>
 
 <script>
 
-/* ENTER = BERECHNEN */
+// ================= SWITCH =================
+function switchMode(){
+let m=document.getElementById("mode").value
 
-document.addEventListener("keydown",function(e){
-if(e.key==="Enter"){
-calc()
-}
-})
+document.getElementById("windUI").style.display =
+m==="wind"?"block":"none"
 
-function clampInputs(){
-
-let p=document.getElementById("pitch")
-let h=document.getElementById("height")
-
-p.addEventListener("input",()=>{
-let v=parseFloat(p.value)
-if(isNaN(v)) return
-if(v>60) p.value=60
-if(v<0) p.value=0
-})
-
-h.addEventListener("input",()=>{
-let v=parseFloat(h.value)
-if(isNaN(v)) return
-if(v>30) h.value=30
-if(v<0) h.value=0
-})
-
+document.getElementById("scaffoldUI").style.display =
+m==="scaffold"?"block":"none"
 }
 
-clampInputs()
+// ================= ROOF =================
+function updateRoofFields(){
 
-async function calc(){
+let t=document.getElementById("g_roofType").value
+let div=document.getElementById("roofFields")
 
-let addr=document.getElementById("address").value
-try{
-
-let geoUrl = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(addr)}&countrycodes=de`
-let geoRes = await fetch(geoUrl)
-let geoData = await geoRes.json()
-
-if(geoData && geoData.length){
-
-let lat=parseFloat(geoData[0].lat)
-let lon=parseFloat(geoData[0].lon)
-
-map.flyTo([lat,lon],10,{duration:1.5})
-
-if(marker) map.removeLayer(marker)
-
-marker = L.marker([lat,lon],{draggable:true}).addTo(map)
-
+if(t==="flat"){
+div.innerHTML=`<input id="g_attika" placeholder="Attikahöhe (m)">`
+}
+else if(t==="gable"){
+div.innerHTML=`
+<input id="g_ridge" placeholder="Firsthöhe">
+<select id="g_sideSec">
+<option value="">Sicherung</option>
+<option value="yes">Mit</option>
+<option value="no">Ohne</option>
+</select>
+`
+}
 }
 
-}catch(e){}
-let pitch=parseFloat(document.getElementById("pitch").value)
-let height=parseFloat(document.getElementById("height").value)
-let terrain=document.getElementById("terrain").value
+// ================= GERÜST CALC =================
+async function calcScaffold(){
 
-let hinweis=document.getElementById("hinweis")
-hinweis.style.display="none"
-hinweis.innerHTML=""
-
-let status=document.getElementById("status")
-status.style.display="block"
-status.className="status loading"
-status.innerHTML="Laden..."
-
-try{
-
-let url=`https://wind-snow-api.onrender.com/calc?address=${encodeURIComponent(addr)}&roof_pitch=${pitch}&roof_height=${height}&terrain=${encodeURIComponent(terrain)}`
-
-let r=await fetch(url)
-let j=await r.json()
-
-document.getElementById("results").style.display="block"
-
-document.getElementById("windzone").innerHTML=j.wind_zone
-document.getElementById("snowzone").innerHTML=j.snow_zone
-document.getElementById("elevation").innerHTML=j.elevation+" m"
-
-document.getElementById("wind").innerHTML=j.wind_pressure.toFixed(2)+" kN/m²"
-document.getElementById("snow").innerHTML=j.snow_regular.toFixed(2)+" kN/m²"
-let flat = j.snow_zone.includes("*")
-
-document.getElementById("flat").innerHTML = flat ? "✔" : "<span class='minus'>-</span>"
-
-if(flat){
-document.getElementById("snowEx").innerHTML =
-j.snow_exceptional.toFixed(2)+" kN/m²"
-}else{
-document.getElementById("snowEx").innerHTML =
-"<span class='minus'>-</span>"
-}
-
-/* ===== NOWE HINWEISE SL-RACK ===== */
-
-if(j.snow_regular>=2.401){
-hinweis.style.display="block"
-hinweis.innerHTML="Individuelle Berechnung nötig!"
-}
-else if(j.snow_regular>=2.101){
-hinweis.style.display="block"
-hinweis.innerHTML="Alphaplatten einsetzen! <br>Nur Hochkant Belegung mit SL-Rack möglich. <br>Quer und Misch Belegung nicht möglich."
-}
-else if(j.snow_regular>=1.601){
-hinweis.style.display="block"
-hinweis.innerHTML="Belegung nur mit SL-Rack möglich."
-}
-
-/* ===== STARE HINWEISE ===== */
-
-else if(j.snow_regular>2.001){
-hinweis.style.display="block"
-hinweis.innerHTML="Alphaplatten einsetzen."
-}
-else{
-
-if(flat){
-
-if(j.snow_exceptional>0.851 && pitch<30){
-hinweis.style.display="block"
-hinweis.innerHTML="ESDEC - Kein Einzelmodul unter 30° Dachneigung möglich."
-}
-
-}else{
-
-if(j.snow_regular>0.851){
-hinweis.style.display="block"
-hinweis.innerHTML="ESDEC - Kein Einzelmodul möglich."
-}
-
-}
-
-}
-
-status.className="status ok"
-status.innerHTML="Fertig"
-
-}catch(e){
-
-status.className="status error"
-status.innerHTML="Server Fehler"
-
-}
-
-}
-let map = L.map('map').setView([51.1657,10.4515],6)
-
-L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',{
-attribution:'©OpenStreetMap ©Carto',
-maxZoom:19
-}).addTo(map)
-
-let marker = null
-
-const addrInput = document.getElementById("address")
-const resultsBox = document.getElementById("searchResults")
-
-function resizeDropdown(){
-let leftCol = document.querySelector(".left-col")
-resultsBox.style.width = leftCol.offsetWidth + "px"
-}
-
-window.addEventListener("resize", resizeDropdown)
-resizeDropdown()
-
-addrInput.addEventListener("input", async function(){
-
-let q = addrInput.value.trim()
-
-if(q.length < 3){
-resultsBox.innerHTML=""
+// WALIDACJA
+if(!g_height.value || !g_pitch.value){
+scaffoldResult.innerHTML="<div class='error'>Uzupełnij dane</div>"
 return
 }
 
-let url = `https://photon.komoot.io/api/?q=${encodeURIComponent(q)}&limit=5`
-
-let res = await fetch(url)
-let json = await res.json()
-
-resultsBox.innerHTML=""
-
-json.features.forEach(f=>{
-
-let street =
-f.properties.street ||
-f.properties.name ||
-""
-let number = f.properties.housenumber || ""
-let postcode = f.properties.postcode || ""
-let city = f.properties.city || f.properties.state || ""
-
-let lat = f.geometry.coordinates[1]
-let lon = f.geometry.coordinates[0]
-
-let div = document.createElement("div")
-div.className="searchItem"
-
-div.innerHTML = `
-<div class="searchStreet">
-${street} ${number}
-</div>
-<div class="searchCity">
-${postcode} ${city}
-</div>
-`
-
-div.onclick = function(){
-
-addrInput.value =
-(street ? street : "") +
-(number ? " " + number : "") +
-(postcode ? ", " + postcode : "") +
-(city ? " " + city : "")
-resultsBox.innerHTML=""
-
-map.flyTo([lat,lon],10,{duration:1.5})
-
-if(marker) map.removeLayer(marker)
-marker = L.marker([lat,lon],{draggable:true}).addTo(map)
-
+let data={
+height: parseFloat(g_height.value),
+length: parseFloat(g_length.value)||null,
+width: parseFloat(g_width.value)||null,
+area: parseFloat(g_area.value)||null,
+roof_pitch: parseFloat(g_pitch.value),
+roof_type: g_roofType.value,
+attika: g_attika?parseFloat(g_attika.value):null,
+ridge: g_ridge?parseFloat(g_ridge.value):null,
+sideSec: g_sideSec?g_sideSec.value:null,
+tax: g_tax.value
 }
 
-resultsBox.appendChild(div)
+let r=await fetch("https://wind-snow-api.onrender.com/scaffold-calc",{
+method:"POST",
+headers:{"Content-Type":"application/json"},
+body:JSON.stringify(data)
+})
 
-})
-})
-</script>
-<div style="margin-top:40px;font-size:12px;color:#9ca3af">
-Svea Solar Deutschland GmbH - Jacek Kotarak
+let j=await r.json()
+
+if(j.error){
+scaffoldResult.innerHTML="<div class='error'>"+j.error+"</div>"
+return
+}
+
+scaffoldResult.innerHTML=`
+<div class="card">
+<div>Fläche: ${j.area.toFixed(2)} m²</div>
+<div>Grundpreis: ${j.base_cost.toFixed(2)} €</div>
+<div>Sicherung: ${j.security_cost.toFixed(2)} €</div>
+<hr>
+<div><b>Gesamt: ${j.total.toFixed(2)} €</b></div>
 </div>
+`
+}
+
+</script>
+
 </body>
 </html>
