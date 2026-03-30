@@ -14,14 +14,14 @@ background:#f3f4f6;
 margin:0;
 }
 
+/* HERO */
 .hero{
-height:460px;
+height:420px;
 background:url("https://cms.prod.photon.sveasolar.com/api/headless/images?id=1060&w=2000&q=80") center/cover;
 display:flex;
 align-items:center;
 justify-content:center;
 position:relative;
-padding-top:120px;
 }
 .hero::after{
 content:"";
@@ -29,29 +29,27 @@ position:absolute;
 inset:0;
 background:linear-gradient(90deg,rgba(0,0,0,0.65),rgba(0,0,0,0.15));
 }
-
 .hero-inner{
 position:relative;
-z-index:8;
+z-index:2;
 color:white;
-width:1000px;
-margin:0 auto;
 }
-
 .hero h1{
-font-size:48px;
+font-size:42px;
 margin:0;
 }
 
+/* PANEL */
 .panel{
 width:1000px;
-margin:-380px auto 60px auto;
+margin:-120px auto 60px auto;
 background:white;
 border-radius:24px;
 box-shadow:0 30px 60px rgba(0,0,0,0.12);
 padding:40px;
 }
 
+/* FORM */
 .row{
 display:flex;
 gap:20px;
@@ -63,6 +61,7 @@ flex:1;
 padding:14px;
 border-radius:12px;
 border:1px solid #e5e7eb;
+font-size:15px;
 }
 
 .btn{
@@ -84,6 +83,17 @@ margin-top:20px;
 .hidden{display:none}
 .error{color:red;font-weight:600}
 
+/* MOBILE */
+@media (max-width: 900px){
+.panel{
+width:92%;
+margin:-80px auto 40px auto;
+padding:20px;
+}
+.hero h1{
+font-size:28px;
+}
+}
 </style>
 </head>
 
@@ -180,14 +190,17 @@ div.innerHTML=`
 </select>
 `
 }
+else{
+div.innerHTML=""
+}
 }
 
 // ================= GERÜST CALC =================
 async function calcScaffold(){
 
 // WALIDACJA
-if(!g_height.value || !g_pitch.value){
-scaffoldResult.innerHTML="<div class='error'>Uzupełnij dane</div>"
+if(!g_height.value || !g_pitch.value || !g_roofType.value){
+scaffoldResult.innerHTML="<div class='error'>Uzupełnij wszystkie wymagane pola</div>"
 return
 }
 
@@ -198,11 +211,13 @@ width: parseFloat(g_width.value)||null,
 area: parseFloat(g_area.value)||null,
 roof_pitch: parseFloat(g_pitch.value),
 roof_type: g_roofType.value,
-attika: g_attika?parseFloat(g_attika.value):null,
-ridge: g_ridge?parseFloat(g_ridge.value):null,
-sideSec: g_sideSec?g_sideSec.value:null,
+attika: typeof g_attika !== "undefined" && g_attika ? parseFloat(g_attika.value) : null,
+ridge: typeof g_ridge !== "undefined" && g_ridge ? parseFloat(g_ridge.value) : null,
+sideSec: typeof g_sideSec !== "undefined" && g_sideSec ? g_sideSec.value : null,
 tax: g_tax.value
 }
+
+try{
 
 let r=await fetch("https://wind-snow-api.onrender.com/scaffold-calc",{
 method:"POST",
@@ -226,6 +241,11 @@ scaffoldResult.innerHTML=`
 <div><b>Gesamt: ${j.total.toFixed(2)} €</b></div>
 </div>
 `
+
+}catch(e){
+scaffoldResult.innerHTML="<div class='error'>Błąd połączenia z serwerem</div>"
+}
+
 }
 
 </script>
