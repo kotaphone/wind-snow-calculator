@@ -1,17 +1,26 @@
 {
-  "grundpreise": {
-    "pro_m2": 12.5,
-    "grundpauschale": 150
+  "preise_pro_3m": {
+    "bis_4m": 900,
+    "bis_6m": 1000,
+    "bis_8m": 1100,
+    "bis_10m": 1200
   },
-  "sicherungen": {
-    "attika_unter_0_7": {
-      "preis_pro_m2": 2.0
-    },
-    "seitensicherung_satteldach": {
-      "preis_pro_m2": 3.5
-    }
+
+  "faktoren": {
+    "bis_10m": 0.35,
+    "bis_20m": 0.45,
+    "bis_30m": 0.55,
+    "ueber_30m": 0.65
   },
+
+  "seitensicherung": {
+    "pauschal_bis_5m": 400,
+    "beschreibung": "Wenn Ortganglänge ≤ 5m → pauschal"
+  },
+
   "mwst": {
     "satz": 0.19
-  }
+  },
+
+  "_readme": "LOGIK:\n\n1. Gerüst wird in 3m Einheiten gerechnet.\n2. Preis pro Einheit hängt von Traufhöhe ab.\n3. Danach wird ein Faktor je nach Gesamtlänge angewendet.\n4. Seitensicherung:\n   - bis 5m → pauschal 400€\n   - über 5m → wie eigenes Gerüst berechnen\n5. Gesamt = Grundpreis + Sicherung\n6. MwSt optional\n\nZIEL:\nRealistische Marktpreise + einfache Kalkulation."
 }
