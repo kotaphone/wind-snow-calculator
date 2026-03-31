@@ -38,14 +38,8 @@ width:1000px;
 margin:0 auto;
 }
 
-.hero{
-display:block;
-padding-top:120px;
-}
-
 .hero h1{
 font-size:48px;
-font-weight:600;
 margin:0;
 }
 
@@ -56,8 +50,6 @@ background:white;
 border-radius:24px;
 box-shadow:0 30px 60px rgba(0,0,0,0.12);
 padding:40px;
-position:relative;
-z-index:3;
 }
 
 .row{
@@ -71,18 +63,15 @@ flex:1;
 padding:14px;
 border-radius:12px;
 border:1px solid #e5e7eb;
-font-size:15px;
 }
 
 .btn{
 padding:14px 26px;
 border-radius:999px;
-font-size:16px;
-cursor:pointer;
-border:none;
 background:linear-gradient(110deg,#ff4b2b,#d600c8);
 color:white;
-box-shadow:0 10px 25px rgba(214,0,200,0.3);
+border:none;
+cursor:pointer;
 }
 
 .card{
@@ -95,7 +84,6 @@ margin-top:20px;
 .error{
 color:red;
 font-weight:600;
-margin-top:10px;
 }
 
 </style>
@@ -112,17 +100,19 @@ margin-top:10px;
 <div class="panel">
 
 <div class="row">
-<input id="g_height" type="number" placeholder="Gerüsthöhe (m)">
-<input id="g_pitch" type="number" placeholder="Dachneigung (°)">
+<input id="g_height" type="number" placeholder="Traufhöhe (m)">
+<select id="g_pitch">
+<option value="">Dachneigung</option>
+<option value="0-20">0° – 20°</option>
+<option value="20-30">20° – 30°</option>
+<option value="30-40">30° – 40°</option>
+<option value="40-60">40° – 60°</option>
+</select>
 </div>
 
 <div class="row">
-<input id="g_length" type="number" placeholder="Länge (m)">
-<input id="g_width" type="number" placeholder="Breite (m)">
-</div>
-
-<div class="row">
-<input id="g_area" type="number" placeholder="oder Fläche (m²)">
+<input id="g_length" type="number" placeholder="Gerüstlänge (m)">
+<input id="g_width" type="number" placeholder="Ortganglänge (m)">
 </div>
 
 <div class="row">
@@ -188,35 +178,15 @@ async function calcScaffold(){
 let result = document.getElementById("result")
 result.innerHTML = ""
 
-let height = parseFloat(g_height.value)
-let pitch = parseFloat(g_pitch.value)
-let length = parseFloat(g_length.value)
-let width = parseFloat(g_width.value)
-let area = parseFloat(g_area.value)
-
-if(!height || !pitch){
-result.innerHTML = "<div class='error'>Podaj wysokość i nachylenie dachu</div>"
-return
-}
-
-if(!area){
-if(!length || !width){
-result.innerHTML = "<div class='error'>Podaj długość i szerokość lub powierzchnię</div>"
-return
-}
-area = length * width
-}
-
 let data = {
-height: height,
-length: length,
-width: width,
-area: area,
-roof_pitch: pitch,
+height: parseFloat(g_height.value),
+length: parseFloat(g_length.value),
+width: parseFloat(g_width.value),
+roof_pitch: g_pitch.value,
 roof_type: g_roofType.value,
-attika: (typeof g_attika !== "undefined" && g_attika) ? parseFloat(g_attika.value) : null,
-ridge: (typeof g_ridge !== "undefined" && g_ridge) ? parseFloat(g_ridge.value) : null,
-sideSec: (typeof g_sideSec !== "undefined" && g_sideSec) ? g_sideSec.value : null,
+attika: g_attika ? parseFloat(g_attika.value) : null,
+ridge: g_ridge ? parseFloat(g_ridge.value) : null,
+sideSec: g_sideSec ? g_sideSec.value : null,
 tax: g_tax.value
 }
 
@@ -237,19 +207,11 @@ return
 
 result.innerHTML = `
 <div class="card">
-<div><b>Gerüstfläche:</b> ${j.area.toFixed(2)} m²</div>
+<div><b>Gerüstlänge:</b> ${j.length} m</div>
 <div><b>Grundpreis:</b> ${j.base_cost.toFixed(2)} €</div>
-<div><b>Sicherungen:</b> ${j.security_cost.toFixed(2)} €</div>
-
+<div><b>Seitensicherung:</b> ${j.security_cost.toFixed(2)} €</div>
 <hr>
-
-<div><b>Zwischensumme:</b> ${(j.base_cost + j.security_cost).toFixed(2)} €</div>
-
-<hr>
-
-<div style="font-size:22px;font-weight:700;color:#16a34a">
-GESAMT: ${j.total.toFixed(2)} €
-</div>
+<div><b>Gesamt:</b> ${j.total.toFixed(2)} €</div>
 </div>
 `
 
