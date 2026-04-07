@@ -185,7 +185,7 @@ let data = {
 height: parseFloat(g_height.value),
 length: parseFloat(g_length.value),
 width: parseFloat(g_width.value),
-roof_pitch: g_pitch.value,
+roof_pitch: parsePitch(g_pitch.value),
 roof_type: g_roofType.value,
 attika: g_attika ? parseFloat(g_attika.value) : null,
 ridge: g_ridge ? parseFloat(g_ridge.value) : null,
