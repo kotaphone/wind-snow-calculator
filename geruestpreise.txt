@@ -1,5 +1,5 @@
 {
-  "grundpreise": {
+  "preise_pro_3m": {
     "bis_4m": 900,
     "bis_6m": 1000,
     "bis_8m": 1100,
