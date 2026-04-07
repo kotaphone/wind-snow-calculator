@@ -175,7 +175,15 @@ div.innerHTML = ""
 }
 
 }
+function parsePitch(val){
 
+if(val === "0-20") return 10
+if(val === "20-30") return 25
+if(val === "30-40") return 35
+if(val === "40-60") return 50
+
+return 20
+}
 async function calcScaffold(){
 
 let result = document.getElementById("result")
@@ -201,7 +209,16 @@ headers:{"Content-Type":"application/json"},
 body: JSON.stringify(data)
 })
 
-let j = await r.json()
+let text = await r.text()
+console.log(text)
+
+let j
+try{
+j = JSON.parse(text)
+}catch{
+result.innerHTML = "<div class='error'>Backend Fehler</div>"
+return
+}
 
 if(j.error){
 result.innerHTML = "<div class='error'>" + j.error + "</div>"
