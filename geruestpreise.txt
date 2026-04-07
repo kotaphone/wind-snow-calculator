@@ -1,5 +1,5 @@
 {
-  "preise_pro_3m": {
+  "grundpreise": {
     "bis_4m": 900,
     "bis_6m": 1000,
     "bis_8m": 1100,
@@ -14,13 +14,12 @@
   },
 
   "seitensicherung": {
-    "pauschal_bis_5m": 400,
-    "beschreibung": "Wenn Ortganglänge ≤ 5m → pauschal"
+    "pauschal_bis_5m": 400
   },
 
   "mwst": {
     "satz": 0.19
   },
 
-  "_readme": "LOGIK:\n\n1. Gerüst wird in 3m Einheiten gerechnet.\n2. Preis pro Einheit hängt von Traufhöhe ab.\n3. Danach wird ein Faktor je nach Gesamtlänge angewendet.\n4. Seitensicherung:\n   - bis 5m → pauschal 400€\n   - über 5m → wie eigenes Gerüst berechnen\n5. Gesamt = Grundpreis + Sicherung\n6. MwSt optional\n\nZIEL:\nRealistische Marktpreise + einfache Kalkulation."
+  "_readme": "LOGIK:\n\n1. Gerüst wird in 3m Einheiten gerechnet.\n2. Preis pro Einheit hängt von Traufhöhe ab.\n3. Danach wird ein Faktor je nach Gesamtlänge angewendet.\n4. Seitensicherung:\n   - bis 5m → pauschal 400€\n   - über 5m → wie eigenes Gerüst berechnen\n5. Gesamt = Grundpreis + Sicherung\n6. MwSt optional"
 }
