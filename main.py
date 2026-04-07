@@ -299,102 +299,91 @@ async def scaffold_calc(req: Request):
             if field not in data or data[field] is None:
                 raise Exception(f"Feld fehlt: {name}")
 
-        require("height", "Gerüsthöhe")
-        require("roof_pitch", "Dachneigung")
+        require("height", "Traufhöhe")
         require("roof_type", "Dachform")
 
-        height = float(data["height"])
-        pitch = float(data["roof_pitch"])
-        roof_type = data["roof_type"]
+        height = float(data.get("height", 0))
+        length = float(data.get("length", 0))
+        width = float(data.get("width", 0))
+        roof_type = data.get("roof_type")
+
+        ridge = float(data.get("ridge", 0))
+        side_sec = data.get("sideSec")
+        tax = data.get("tax")
 
         if height <= 0:
-            raise Exception("Gerüsthöhe muss größer als 0 sein")
+            raise Exception("Traufhöhe muss größer als 0 sein")
 
-        if pitch < 0:
-            raise Exception("Dachneigung ungültig")
+        if length <= 0:
+            raise Exception("Gerüstlänge fehlt")
 
-        # ===== FLÄCHE =====
-        area = data.get("area")
-
-        if not area:
-            length = float(data.get("length", 0))
-            width = float(data.get("width", 0))
-
-            if length <= 0 or width <= 0:
-                raise Exception("Bitte Länge und Breite oder Fläche angeben")
-
-            area = length * width
-
-        # ===== PREISE =====
-        with open("geruestpreise.txt") as f:
+        # ===== PREISE LADEN =====
+        with open(os.path.join(BASE_DIR, "geruestpreise.txt")) as f:
             prices = json.load(f)
 
-        price_m2 = prices["grundpreise"]["pro_m2"]
-        base_price = prices["grundpreise"]["grundpauschale"]
+        # ===== PREIS PRO 3m JE NACH HÖHE =====
+        if height <= 4:
+            base_unit = prices["preise_pro_3m"]["bis_4m"]
+        elif height <= 6:
+            base_unit = prices["preise_pro_3m"]["bis_6m"]
+        elif height <= 8:
+            base_unit = prices["preise_pro_3m"]["bis_8m"]
+        else:
+            base_unit = prices["preise_pro_3m"]["bis_10m"]
 
-        base_cost = area * price_m2 + base_price
+        # ===== EINHEITEN (3m SYSTEM) =====
+        units = max(1, round(length / 3))
 
+        # ===== LÄNGENFAKTOR =====
+        if length <= 10:
+            factor = prices["faktoren"]["bis_10m"]
+        elif length <= 20:
+            factor = prices["faktoren"]["bis_20m"]
+        elif length <= 30:
+            factor = prices["faktoren"]["bis_30m"]
+        else:
+            factor = prices["faktoren"]["ueber_30m"]
+
+        base_cost = units * base_unit * factor
+
+        breakdown = [{
+            "name": f"Grundgerüst ({units} × 3m)",
+            "value": base_cost
+        }]
+
+        # ===== SEITENSICHERUNG =====
         security_cost = 0
-        breakdown = []
 
-        # ===== FLACHDACH =====
-        if roof_type == "flat":
-            attika = float(data.get("attika", 0))
+        if roof_type == "gable" and side_sec == "yes":
 
-            if attika <= 0:
-                raise Exception("Attikahöhe fehlt")
+            if width <= 0:
+                raise Exception("Ortganglänge fehlt")
 
-            if attika < 0.7:
-                sec_price = prices["sicherungen"]["attika_unter_0_7"]["preis_pro_m2"]
-                security_cost = area * sec_price
+            # mały ortgang → pauschal
+            if width <= 5:
+                security_cost = prices["seitensicherung"]["pauschal_bis_5m"]
 
-                breakdown.append({
-                    "name": "Sicherung Attika (< 0,7 m)",
-                    "value": security_cost
-                })
+            # duży ortgang → liczony jak rusztowanie
+            else:
+                sec_units = max(1, round(width / 3))
+                security_cost = sec_units * base_unit * 0.5
 
-        # ===== SATTELDACH =====
-        elif roof_type == "gable":
-            ridge = float(data.get("ridge", 0))
-            side_sec = data.get("sideSec")
-
-            if ridge <= 0:
-                raise Exception("Firsthöhe fehlt")
-
-            if not side_sec:
-                raise Exception("Seitensicherung auswählen")
-
-            if side_sec == "yes":
-                width = float(data.get("width", 0))
-
-                if width <= 0:
-                    raise Exception("Gebäudebreite fehlt")
-
-                sec_price = prices["sicherungen"]["seitensicherung_satteldach"]["preis_pro_m2"]
-
-                security_cost = width * ridge * 2 * sec_price
-
-                breakdown.append({
-                    "name": "Seitensicherung",
-                    "value": security_cost
-                })
+            breakdown.append({
+                "name": "Seitensicherung",
+                "value": security_cost
+            })
 
         # ===== SUMME =====
         total = base_cost + security_cost
 
-        if data.get("tax") == "gross":
+        if tax == "gross":
             total *= (1 + prices["mwst"]["satz"])
 
-        breakdown.insert(0, {
-            "name": "Grundpreis Gerüst",
-            "value": base_cost
-        })
-
         return {
-            "area": area,
-            "base_cost": base_cost,
-            "security_cost": security_cost,
-            "total": total,
+            "length": length,
+            "base_cost": round(base_cost, 2),
+            "security_cost": round(security_cost, 2),
+            "total": round(total, 2),
             "breakdown": breakdown
         }
 
