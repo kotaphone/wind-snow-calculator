@@ -190,14 +190,14 @@ let result = document.getElementById("result")
 result.innerHTML = ""
 
 let data = {
-height: parseFloat(g_height.value),
-length: parseFloat(g_length.value),
-width: parseFloat(g_width.value),
+height: parseFloat(g_height.value) || 0,
+length: parseFloat(g_length.value) || 0,
+width: parseFloat(g_width.value) || 0,
 roof_pitch: parsePitch(g_pitch.value),
 roof_type: g_roofType.value,
-attika: g_attika ? parseFloat(g_attika.value) : null,
-ridge: g_ridge ? parseFloat(g_ridge.value) : null,
-sideSec: g_sideSec ? g_sideSec.value : null,
+attika: document.getElementById("g_attika") ? parseFloat(document.getElementById("g_attika").value) : null,
+ridge: document.getElementById("g_ridge") ? parseFloat(document.getElementById("g_ridge").value) : null,
+sideSec: document.getElementById("g_sideSec") ? document.getElementById("g_sideSec").value : null,
 tax: g_tax.value
 }
 
