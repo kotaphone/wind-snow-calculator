@@ -84,7 +84,7 @@ def geocode(address):
 def elevation(lat, lon):
 
     try:
-        url = f"https://api.open-elevation.com/api/v1/lookup?locations={lat},{lon}"
+        url = f"https://api.opentopodata.org//v1/eudem25m?locations={lat},{lon}"
 
         for _ in range(2):
             r = requests.get(url, timeout=6)
