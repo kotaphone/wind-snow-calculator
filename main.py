@@ -83,22 +83,58 @@ def geocode(address):
 
 def elevation(lat, lon):
 
+    errors = []
+
+    # -------- 1. OpenTopoData --------
     try:
-        url = f"https://api.opentopodata.org//v1/eudem25m?locations={lat},{lon}"
+        url = f"https://api.opentopodata.org/v1/eudem25m?locations={lat},{lon}"
+        r = requests.get(url, timeout=5)
 
-        for _ in range(2):
-            r = requests.get(url, timeout=6)
+        if r.status_code == 200:
+            data = r.json()
 
-            if r.status_code == 200:
-                data = r.json()
+            if "results" in data and len(data["results"]) > 0:
                 return data["results"][0]["elevation"]
 
-            time.sleep(0.3)
+        errors.append("opentopodata failed")
 
-        return 0
+    except Exception as e:
+        errors.append(f"opentopodata error: {e}")
 
-    except Exception:
-        return 0
+    # -------- 2. Open-Meteo --------
+    try:
+        url = f"https://api.open-meteo.com/v1/elevation?latitude={lat}&longitude={lon}"
+        r = requests.get(url, timeout=5)
+
+        if r.status_code == 200:
+            data = r.json()
+
+            if "elevation" in data:
+                return data["elevation"][0]
+
+        errors.append("open-meteo failed")
+
+    except Exception as e:
+        errors.append(f"open-meteo error: {e}")
+
+    # -------- 3. Open-Elevation --------
+    try:
+        url = f"https://api.open-elevation.com/api/v1/lookup?locations={lat},{lon}"
+        r = requests.get(url, timeout=5)
+
+        if r.status_code == 200:
+            data = r.json()
+
+            if "results" in data and len(data["results"]) > 0:
+                return data["results"][0]["elevation"]
+
+        errors.append("open-elevation failed")
+
+    except Exception as e:
+        errors.append(f"open-elevation error: {e}")
+
+    # -------- FAIL --------
+    raise Exception("Elevation API failed: " + " | ".join(errors))
 
 
 def get_zone(gdf, lat, lon):
