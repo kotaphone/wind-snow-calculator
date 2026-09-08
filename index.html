@@ -389,16 +389,23 @@ clampInputs()
 async function calc(){
 
 let addr=document.getElementById("address").value
+
+let lat
+let lon
+
 try{
 
 let geoUrl = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(addr)}&countrycodes=de`
+
 let geoRes = await fetch(geoUrl)
 let geoData = await geoRes.json()
 
-if(geoData && geoData.length){
+if(!geoData || !geoData.length){
+    throw new Error("Adresse nicht gefunden")
+}
 
-let lat=parseFloat(geoData[0].lat)
-let lon=parseFloat(geoData[0].lon)
+lat = parseFloat(geoData[0].lat)
+lon = parseFloat(geoData[0].lon)
 
 map.flyTo([lat,lon],10,{duration:1.5})
 
@@ -406,9 +413,15 @@ if(marker) map.removeLayer(marker)
 
 marker = L.marker([lat,lon],{draggable:true}).addTo(map)
 
-}
+}catch(e){
 
-}catch(e){}
+let status=document.getElementById("status")
+status.style.display="block"
+status.className="status error"
+status.innerHTML="Adresse konnte nicht gefunden werden"
+return
+
+}
 let pitch=parseFloat(document.getElementById("pitch").value)
 let height=parseFloat(document.getElementById("height").value)
 let terrain=document.getElementById("terrain").value
@@ -424,7 +437,7 @@ status.innerHTML="Laden..."
 
 try{
 
-let url=`https://wind-snow-api.onrender.com/calc?address=${encodeURIComponent(addr)}&roof_pitch=${pitch}&roof_height=${height}&terrain=${encodeURIComponent(terrain)}`
+let url=`https://wind-snow-api.onrender.com/calc?lat=${lat}&lon=${lon}&roof_pitch=${pitch}&roof_height=${height}&terrain=${encodeURIComponent(terrain)}`
 
 let r=await fetch(url)
 let j=await r.json()
