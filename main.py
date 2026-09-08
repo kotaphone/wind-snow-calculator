@@ -47,36 +47,73 @@ wind.sindex
 
 def geocode(address):
 
-    url = "https://nominatim.openstreetmap.org/search"
+    # -------- 1. Nominatim --------
+    try:
+        url = "https://nominatim.openstreetmap.org/search"
 
-    params = {
-        "q": address,
-        "format": "json",
-        "limit": 1,
-        "countrycodes": "de"
-    }
+        params = {
+            "q": address,
+            "format": "json",
+            "limit": 1,
+            "countrycodes": "de"
+        }
 
-    headers = {
-        "User-Agent": "wind-snow-calculator"
-    }
+        headers = {
+            "User-Agent": "WindSnowCalculator/1.0",
+            "Accept": "application/json"
+        }
 
-    for _ in range(2):
-        try:
-            r = requests.get(url, params=params, headers=headers, timeout=6)
+        r = requests.get(
+            url,
+            params=params,
+            headers=headers,
+            timeout=10
+        )
 
-            if r.status_code != 200:
-                time.sleep(0.4)
-                continue
-
+        if r.status_code == 200:
             data = r.json()
 
-            if len(data) == 0:
-                raise Exception("Adresse nicht gefunden")
+            if len(data) > 0:
+                return (
+                    float(data[0]["lat"]),
+                    float(data[0]["lon"])
+                )
 
-            return float(data[0]["lat"]), float(data[0]["lon"])
+    except Exception:
+        pass
 
-        except Exception:
-            time.sleep(0.4)
+
+    # -------- 2. Photon fallback --------
+    try:
+        url = "https://photon.komoot.io/api/"
+
+        params = {
+            "q": address,
+            "limit": 1
+        }
+
+        r = requests.get(
+            url,
+            params=params,
+            timeout=10
+        )
+
+        if r.status_code == 200:
+            data = r.json()
+
+            features = data.get("features", [])
+
+            if len(features) > 0:
+                coords = features[0]["geometry"]["coordinates"]
+
+                lon = float(coords[0])
+                lat = float(coords[1])
+
+                return lat, lon
+
+    except Exception:
+        pass
+
 
     raise Exception("Geocoding fehlgeschlagen")
 
