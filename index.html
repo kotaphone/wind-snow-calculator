@@ -442,6 +442,10 @@ let url=`https://wind-snow-api.onrender.com/calc?lat=${lat}&lon=${lon}&roof_pitc
 let r=await fetch(url)
 let j=await r.json()
 
+if(j.error){
+    throw new Error(j.error)
+}
+
 document.getElementById("results").style.display="block"
 
 document.getElementById("windzone").innerHTML=j.wind_zone
@@ -509,7 +513,7 @@ status.innerHTML="Fertig"
 }catch(e){
 
 status.className="status error"
-status.innerHTML="Server Fehler"
+status.innerHTML="Fehler: " + e.message
 
 }
 
