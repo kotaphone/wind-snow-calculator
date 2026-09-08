@@ -305,7 +305,7 @@ def wind_pressure(zone, height, terrain):
 # ---------------- API ----------------
 
 @app.get("/calc")
-def calc(address: str, roof_pitch: float, roof_height: float, terrain: str):
+def calc(lat: float, lon: float, roof_pitch: float, roof_height: float, terrain: str):
 
     try:
 
@@ -318,7 +318,6 @@ def calc(address: str, roof_pitch: float, roof_height: float, terrain: str):
         if roof_height < 0 or roof_height > 30:
             raise Exception("roof_height invalid")
 
-        lat, lon = geocode(address)
         h = elevation(lat, lon)
 
         snow_zone = get_zone(snow, lat, lon)
