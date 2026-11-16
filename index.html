@@ -486,11 +486,15 @@ hinweis.innerHTML="Belegung nur mit SL-Rack möglich."
 }
 else if(j.snow_regular>=0.801){
 hinweis.style.display="block"
-hinweis.innerHTML="SL-Rack - Beton - Multihook Montage nicht erlaubt. Layout Horizontal - Modulversatz vermeiden."
+hinweis.innerHTML="SL-Rack - Beton - Multihook Montage nicht erlaubt!"
+}
+    else if(j.snow_regular<=0.800){
+hinweis.style.display="block"
+hinweis.innerHTML="SL-Rack - Beton - Layout Horizontal - Modulversatz (Stufen) vermeiden."
 }
 else if(j.snow_regular>=pitch<20){
 hinweis.style.display="block"
-hinweis.innerHTML="SL-Rack - Beton - Multihook Montage nicht erlaubt. Layout Horizontal - Modulversatz vermeiden."
+hinweis.innerHTML="SL-Rack - Beton - Multihook Montage nicht erlaubt!"
 }
 
 
