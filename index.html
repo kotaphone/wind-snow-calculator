@@ -491,16 +491,16 @@ else{
 
 if(flat){
 
-if(j.snow_exceptional>0.851 && pitch<30){
+if(j.snow_exceptional>0.851 && pitch<20){
 hinweis.style.display="block"
-hinweis.innerHTML="ESDEC - Kein Einzelmodul unter 30° Dachneigung möglich."
+hinweis.innerHTML="SL-Rack - Beton - Multihook Montage nicht erlaubt. Layout Horizontal - Modulversatz vermeiden."
 }
 
 }else{
 
-if(j.snow_regular>0.851){
+if(j.snow_regular>0.851 && pitch<20){
 hinweis.style.display="block"
-hinweis.innerHTML="ESDEC - Kein Einzelmodul möglich."
+hinweis.innerHTML="SL-Rack - Beton - Multihook Montage nicht erlaubt. Layout Horizontal - Modulversatz vermeiden."
 }
 
 }
