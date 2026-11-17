@@ -484,17 +484,13 @@ else if(j.snow_regular>=1.601){
 hinweis.style.display="block"
 hinweis.innerHTML="Belegung nur mit SL-Rack möglich."
 }
-else if(j.snow_regular>=0.801){
-hinweis.style.display="block"
-hinweis.innerHTML="SL-Rack - Beton (Multihook) - Multihook Montage nicht erlaubt! Sparrenabstände erforderlich!"
+else if (j.snow_regular > 0.800 || pitch < 20) {
+    hinweis.style.display = "block";
+    hinweis.innerHTML = "SL-Rack - Beton (Multihook) - Multihook Montage nicht erlaubt! Sparrenabstände erforderlich!";
 }
-    else if(j.snow_regular<=0.800){
-hinweis.style.display="block"
-hinweis.innerHTML="SL-Rack - Beton (Multihook) - Layout horizontal: Module möglichst übereinander anordnen, Stufenbildung vermeiden!"
-}
-else if(j.snow_regular>=pitch<20){
-hinweis.style.display="block"
-hinweis.innerHTML="SL-Rack - Beton (Multihook) - Multihook Montage nicht erlaubt! Sparrenabstände erforderlich!"
+else if (j.snow_regular <= 0.800) {
+    hinweis.style.display = "block";
+    hinweis.innerHTML = "SL-Rack - Beton (Multihook) - Layout horizontal: Module möglichst übereinander anordnen, Stufenbildung vermeiden!";
 }
 
 
