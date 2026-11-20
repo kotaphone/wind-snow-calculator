@@ -468,32 +468,174 @@ document.getElementById("snowEx").innerHTML =
 
 /* ===== NOWE HINWEISE SL-RACK ===== */
 
-if(j.snow_regular>=2.401){
+if(j.snow_regular >=2.401 || j.wind_pressure >=2.401){
 hinweis.style.display="block"
-hinweis.innerHTML="Individuelle Berechnung nötig!"
-}
-else if(j.snow_regular>=2.101){
-hinweis.style.display="block"
-hinweis.innerHTML="Alphaplatten einsetzen! <br>Nur Hochkant Belegung mit SL-Rack möglich. <br>Quer und Misch Belegung nicht möglich."
-}
-else if(j.snow_regular>=2.001){
-hinweis.style.display="block"
-hinweis.innerHTML="Alphaplatten einsetzen!"
-}
-else if(j.snow_regular>=1.601){
-hinweis.style.display="block"
-hinweis.innerHTML="Belegung nur mit SL-Rack möglich."
-}
-else if (j.snow_regular > 0.800 || pitch < 20) {
-    hinweis.style.display = "block";
-    hinweis.innerHTML = "SL-Rack - Beton (Multihook) - Multihook Montage nicht erlaubt! Sparrenabstände erforderlich!";
-}
-else if (j.snow_regular <= 0.800) {
-    hinweis.style.display = "block";
-    hinweis.innerHTML = "SL-Rack - Beton (Multihook) - Layout horizontal: Module möglichst übereinander anordnen, Stufenbildung vermeiden!";
-}
+hinweis.innerHTML = `
+<div style="font-size:18px; font-weight:bold; margin-bottom:10px;">
+⚠️ Außergewöhnliche schneelasten!
+</div>
+
+<div style="font-size:15px; margin-bottom:10px;">
+Individuelle Berechnung nötig!
+</div>
 
 
+`;
+}
+
+else if(j.snow_regular >=2.101 || j.wind_pressure >=2.101){
+hinweis.style.display="block"
+hinweis.innerHTML = `
+<div style="font-size:18px; font-weight:bold; margin-bottom:10px;">
+⚠️ Sehr Hoche schneelasten!
+</div>
+
+<div style="font-size:15px; margin-bottom:10px;">
+Alphaplatten ins Angebot aufnehmen!
+</div>
+
+<div style="border-top:1px solid #e5c66b; padding-top:10px;">
+<strong>Erforderlich:</strong><br>
+</div>
+<div style="font-size:15px; margin-bottom:10px;">
+Sparrenabstände müssen berücksichtigt werden.
+</div>
+
+<div style="border-top:1px solid #e5c66b; margin-top:10px; padding-top:10px;">
+<strong>⚠️Wichtig!</strong><br>
+</div>
+
+<div style="font-size:15px; margin-bottom:10px;">
+Nur Hochkant Belegung mit SL-Rack möglich.
+<br>Quer und Misch Belegung nicht möglich.
+
+
+</div>
+`;
+
+}
+
+else if(j.snow_regular >=2.001 || j.wind_pressure >=2.001){
+hinweis.style.display="block"
+hinweis.innerHTML = `
+<div style="font-size:18px; font-weight:bold; margin-bottom:10px;">
+⚠️ Hoche schneelasten!
+</div>
+
+<div style="font-size:15px; margin-bottom:10px;">
+Alphaplatten ins Angebot aufnehmen!
+</div>
+
+<div style="border-top:1px solid #e5c66b; margin-top:10px; padding-top:10px;">
+<strong>⚠️ Betondach!</strong><br>
+</div>
+
+<div style="font-size:15px; margin-bottom:10px;">
+Montage mit SL-Rack "Multi Hook" nicht erlaubt!
+</div>
+
+<div style="border-top:1px solid #e5c66b; padding-top:10px;">
+<strong>Erforderlich:</strong><br>
+</div>
+
+<div style="font-size:15px; margin-bottom:10px;">
+Sparrenabstände müssen berücksichtigt werden.
+</div>
+
+<div style="border-top:1px solid #e5c66b; margin-top:10px; padding-top:10px;">
+<strong>Installation:</strong><br>
+</div>
+
+<div style="font-size:15px; margin-bottom:10px;">
+DC-Installation Betondachstein (Sparrenbefestigung)
+</div>
+
+`;
+
+}
+
+else if(j.snow_regular >=1.601 || j.wind_pressure >=1.601){
+hinweis.style.display="block"
+hinweis.innerHTML = `
+<div style="font-size:18px; font-weight:bold; margin-bottom:10px;">
+⚠️ Höhere schneelasten!
+</div>
+
+<div style="font-size:15px; margin-bottom:10px;">
+Belegung nur mit Sparrenhaken möglich.
+</div>
+
+<div style="border-top:1px solid #e5c66b; margin-top:10px; padding-top:10px;">
+<strong>⚠️ Betondach!</strong><br>
+</div>
+
+<div style="font-size:15px; margin-bottom:10px;">
+Montage mit SL-Rack "Multi Hook" nicht erlaubt!
+</div>
+
+<div style="border-top:1px solid #e5c66b; padding-top:10px;">
+<strong>Erforderlich:</strong><br>
+</div>
+
+<div style="font-size:15px; margin-bottom:10px;">
+Sparrenabstände müssen berücksichtigt werden.
+</div>
+
+<div style="border-top:1px solid #e5c66b; margin-top:10px; padding-top:10px;">
+<strong>Installation:</strong><br>
+</div>
+
+<div style="font-size:15px; margin-bottom:10px;">
+DC-Installation Betondachstein (Sparrenbefestigung)
+</div>
+`;
+
+
+}
+
+else if (j.snow_regular >0.800 || pitch < 20 || j.wind_pressure >0.800) {
+    hinweis.style.display = "block";
+    hinweis.innerHTML = `
+<div style="font-size:18px; font-weight:bold; margin-bottom:10px;">
+⚠️ Betondach!
+</div>
+
+<div style="font-size:15px; margin-bottom:10px;">
+Montage mit SL-Rack "Multi Hook" nicht erlaubt!
+</div>
+
+<div style="border-top:1px solid #e5c66b; padding-top:10px;">
+<strong>Erforderlich:</strong><br>
+</div>
+
+<div style="font-size:15px; margin-bottom:10px;">
+Sparrenabstände müssen berücksichtigt werden.
+</div>
+
+<div style="border-top:1px solid #e5c66b; margin-top:10px; padding-top:10px;">
+<strong>Installation:</strong><br>
+</div>
+
+<div style="font-size:15px; margin-bottom:10px;">
+DC-Installation Betondachstein (Sparrenbefestigung)
+</div>
+`;
+
+}
+else if (j.snow_regular <=0.800 || j.wind_pressure <=0.800) {
+    hinweis.style.display = "block";
+    hinweis.innerHTML = `
+<div style="font-size:18px; font-weight:bold; margin-bottom:10px;">
+Betondach - Layout horizontal:
+</div>
+
+<div style="font-size:15px; margin-bottom:10px;">
+Module möglichst übereinander anordnen, Stufenbildung bitte vermeiden! :)
+</div>
+
+`;
+
+}
 
 /* ===== STARE HINWEISE ===== */
 
